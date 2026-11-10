@@ -1,0 +1,109 @@
+# GoSSHpher – sample configuration to play with
+#
+#   gosshpher ./config.example
+#
+# All hosts are fictitious (example.com/.org/.net, 192.0.2.0/24) and the key
+# files do not exist, so the "File not found" hints are expected here.
+
+# Hosts maintained by the team live in separate files. The editor lists the
+# matching files below this line; a click opens one in a new window.
+Include config.example.d/*.conf
+
+# [GitHub] start
+# Two GitHub accounts via SSH on port 443:
+#   git clone git@github-work:company/project.git
+Host github.com github-work github-private
+  Hostname ssh.github.com
+  Port 443
+  User git
+
+Host github-work
+  IdentityFile ~/.ssh/work/ed25519
+
+Host github-private
+  IdentityFile ~/.ssh/private/ed25519
+# [GitHub] end
+
+# [GitLab] start
+# Self-hosted GitLab with SSH on its own port
+Host gitlab.example.com gitlab
+  Hostname gitlab.example.com
+  Port 2222
+  User git
+  IdentityFile ~/.ssh/work/ed25519
+
+# Second block with the same patterns: IdentityFile adds up,
+# ssh tries both keys one after the other
+Host gitlab.example.com gitlab
+  IdentityFile ~/.ssh/private/ed25519
+# [GitLab] end
+
+# [Shop] start
+# One server for production and staging; every alias starts in its own directory
+Host shop.example.com stage.shop.example.com web01.example.net
+  Hostname web01.example.net
+  Port 2222
+  User deploy
+  IdentityFile ~/.ssh/work/rsa_4096
+  RequestTTY force
+
+Host shop.example.com
+  RemoteCommand cd /var/www/shop/prod/current && exec $SHELL -l
+
+Host stage.shop.example.com
+  RemoteCommand cd /var/www/shop/stage/current && exec $SHELL -l
+# [Shop] end
+
+# [Datacenter] start
+Host bastion
+  Hostname bastion.example.org
+  User admin
+  IdentityFile ~/.ssh/work/ed25519
+
+# Internal servers; %h is replaced by the alias (db01, db02, app01)
+Host db01 db02 app01
+  Hostname %h.internal.example.org
+  User admin
+
+Host db01
+  LocalForward 5432 localhost:5432
+
+# Deliberate mistake to try things out: "User postgres" has no effect,
+# because the block above already sets User for db02 (see "Hints").
+# Fix: move this block above the shared block.
+Host db02
+  User postgres
+
+# Outside the office network the internal servers are only reachable via the
+# bastion host. ssh runs the command when connecting (%h is the Hostname);
+# GoSSHpher assumes a result or runs it after asking (see "Effective").
+Match originalhost db01,db02,app01 !exec "nc -z -w 1 %h 22"
+  ProxyJump bastion
+# [Datacenter] end
+
+Host 192.0.2.10 nas nas.home.example
+  Hostname 192.0.2.10
+  User admin
+
+# All hosts of the domain except the test system
+# (compare www.example.org and test.example.org in the "Effective" tab)
+Host *.example.org !test.example.org
+  ServerAliveInterval 30
+  ServerAliveCountMax 3
+
+# Always offer the admin key as root (ssh -l root …)
+# (enter a host in the "Effective" tab and root as user)
+Match user root
+  IdentityFile ~/.ssh/admin/ed25519
+
+# Defaults for all hosts – at the end, so more specific blocks can
+# override them
+Host *
+  AddKeysToAgent yes
+  IdentitiesOnly yes
+  ServerAliveInterval 60
+  # reuse connections; %r, %h and %p become user, host and port
+  # (see the "Effective" tab for the resulting path)
+  ControlMaster auto
+  ControlPath ~/.ssh/sockets/%r@%h-%p
+  ControlPersist 10m

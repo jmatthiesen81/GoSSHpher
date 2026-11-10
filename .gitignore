@@ -1,0 +1,6 @@
+/build/bin/
+/frontend/package.json.md5
+/**/node_modules/
+/config.*
+!/config.example
+!/config.example.d/

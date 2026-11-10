@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GoSSHpher</title>
+</head>
+<body>
+<!-- Texts are translated at runtime from internal/i18n/locales/*.json (see src/i18n.js);
+     the English texts here are only the fallback before the catalog is loaded. -->
+<header class="toolbar">
+    <div class="brand">GoSSHpher</div>
+    <button id="btn-open" data-i18n="toolbar.open" data-i18n-title="toolbar.open.title">Open…</button>
+    <div class="split" id="save-split">
+        <button id="btn-save" class="primary" data-i18n="toolbar.save" data-i18n-title="toolbar.save.title">Save</button>
+        <button id="btn-save-menu" class="primary split-toggle" aria-haspopup="menu" aria-expanded="false"
+                aria-controls="save-menu" data-i18n-title="toolbar.saveMenu.title">▾</button>
+        <div id="save-menu" class="menu" role="menu" hidden>
+            <button id="btn-saveas" role="menuitem" data-i18n="toolbar.saveAs">Save as…</button>
+        </div>
+    </div>
+    <button id="btn-reload" class="icon" data-i18n-title="toolbar.reload.title">↻</button>
+    <button id="btn-undo" class="icon" data-i18n-title="toolbar.undo.title" disabled>↶</button>
+    <button id="btn-redo" class="icon" data-i18n-title="toolbar.redo.title" disabled>↷</button>
+    <div class="path"><span id="path"></span><span id="dirty" class="dirty" data-i18n="toolbar.unsaved" hidden>● unsaved</span></div>
+    <div class="tabs" role="tablist">
+        <button id="tab-editor" class="tab active" role="tab" data-i18n="tab.editor">Editor</button>
+        <button id="tab-text" class="tab" role="tab" data-i18n="tab.text">Text</button>
+    </div>
+    <button id="btn-settings" data-i18n-title="toolbar.settings.title">⚙</button>
+</header>
+
+<main id="view-editor" class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-head">
+            <input id="filter" type="search" data-i18n-placeholder="sidebar.filter.placeholder" autocomplete="off" spellcheck="false">
+            <label class="sort-row"><span data-i18n="sidebar.sort">Sort</span>
+                <select id="sort">
+                    <option value="file" data-i18n="sort.file">File order</option>
+                    <option value="alias" data-i18n="sort.alias">Alias A–Z</option>
+                    <option value="hostname" data-i18n="sort.hostname">Hostname A–Z</option>
+                </select>
+            </label>
+        </div>
+        <ol id="blocks" class="blocks"></ol>
+        <div class="sidebar-foot">
+            <button id="btn-add-host" data-i18n="sidebar.addHost">+ Host</button>
+            <button id="btn-add-match" data-i18n="sidebar.addMatch">+ Match</button>
+            <button id="btn-add-group" data-i18n="sidebar.addGroup" data-i18n-title="sidebar.addGroup.title">+ Group</button>
+        </div>
+    </aside>
+    <div class="splitter" data-split="side" data-i18n-title="splitter.title"></div>
+
+    <section id="editor" class="editor"></section>
+
+    <div class="splitter" data-split="insp" data-i18n-title="splitter.title"></div>
+    <aside class="inspector">
+        <div class="tabs small">
+            <button id="itab-eff" class="tab active" data-i18n="inspector.effective">Effective</button>
+            <button id="itab-issues" class="tab"><span data-i18n="inspector.hints">Hints</span> <span id="issue-count" class="count"></span></button>
+        </div>
+        <div id="panel-eff" class="panel">
+            <form id="eff-form" class="eff-form">
+                <input id="eff-host" data-i18n-placeholder="eff.host.placeholder" autocomplete="off" spellcheck="false">
+                <input id="eff-user" data-i18n-placeholder="eff.user.placeholder" autocomplete="off" spellcheck="false">
+            </form>
+            <div id="eff-patterns" class="chips"></div>
+            <div id="eff-result"></div>
+        </div>
+        <div id="panel-issues" class="panel" hidden></div>
+    </aside>
+</main>
+
+<main id="view-text" class="textview" hidden>
+    <div class="textbar">
+        <span data-i18n="text.info">Edit the file directly. Switching back to the editor parses the text again.</span>
+        <button id="btn-apply-text" class="primary" data-i18n="text.apply">Apply</button>
+    </div>
+    <textarea id="text" spellcheck="false" wrap="off"></textarea>
+</main>
+
+<div id="modal" class="modal" hidden>
+    <div class="modal-box">
+        <h2 id="modal-title"></h2>
+        <p id="modal-text"></p>
+        <div class="modal-buttons" id="modal-buttons"></div>
+    </div>
+</div>
+<div id="gdialog" class="modal" hidden>
+    <div class="modal-box wide" role="dialog" aria-labelledby="gd-title">
+        <h2 id="gd-title"></h2>
+        <label class="field-label" for="gd-name" data-i18n="gd.name">Name</label>
+        <input id="gd-name" autocomplete="off" spellcheck="false" data-i18n-placeholder="gd.name.placeholder">
+        <div id="gd-name-error" class="issue error" hidden></div>
+        <label class="field-label" for="gd-input" data-i18n="gd.hosts">Hosts</label>
+        <div id="gd-tokens" class="tokens">
+            <input id="gd-input" autocomplete="off" spellcheck="false" data-i18n-placeholder="gd.search.placeholder"
+                   role="combobox" aria-controls="gd-suggest" aria-expanded="false">
+        </div>
+        <ul id="gd-suggest" class="suggest" role="listbox" hidden></ul>
+        <div class="hint" data-i18n="gd.hint"></div>
+        <div id="gd-changes" class="changes" hidden></div>
+        <div class="modal-buttons">
+            <button id="gd-ok" class="primary"></button>
+            <button id="gd-cancel" data-i18n="common.cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+<div id="settings" class="modal" hidden>
+    <div class="modal-box" role="dialog" aria-labelledby="set-title">
+        <h2 id="set-title" data-i18n="settings.title">Settings</h2>
+        <label class="field-label" for="set-language" data-i18n="settings.language">Language</label>
+        <select id="set-language"></select>
+        <label class="check-row"><input type="checkbox" id="set-backup"> <span data-i18n="settings.backup">Create a backup before overwriting</span></label>
+        <div class="hint" data-i18n-html="settings.backup.hint_html"></div>
+        <label class="field-label" for="set-keep" data-i18n="settings.keep">Backups kept per file</label>
+        <input id="set-keep" type="number" min="0" max="1000" step="1">
+        <div class="hint" data-i18n="settings.keep.hint"></div>
+        <label class="field-label" data-i18n="settings.path">Stored in</label>
+        <code id="set-path" class="path-box"></code>
+        <div id="set-error" class="issue error" hidden></div>
+        <div class="modal-buttons">
+            <button id="set-ok" class="primary" data-i18n="common.save">Save</button>
+            <button id="set-cancel" data-i18n="common.cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<datalist id="kw-list"></datalist>
+<div id="datalists"></div>
+<script src="./src/main.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+# Limitations and design decisions
+
+What GoSSHpher deliberately does not do, the limits of its evaluation, and the security and maintenance aspects to keep in mind. None of this is a known bug.
+
+## Functional limitations
+
+| Topic                               | Detail                                                                                                                                                                                                                                                              | Where                                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `Match` evaluation                  | `exec` is never run automatically: its result is assumed (default: fails) or the user runs it on request; `localnetwork`, `version`, `sessiontype`, `command` count as not matching; `canonical` is not simulated; `final` is assumed true.                         | [resolve.go](../../internal/sshconfig/resolve.go)                                              |
+| `Include`                           | Included files are evaluated and open in a new window (second process); the main window does not edit them. Relative paths are resolved against the directory of the edited file (ssh uses `~/.ssh` for the user config, so this only differs for files elsewhere). | [resolve.go](../../internal/sshconfig/resolve.go), [external.go](../../external.go)            |
+| Shadowing checks and change preview | Only literal aliases are evaluated; hosts that only match wildcard patterns are not checked.                                                                                                                                                                        | [analyze.go](../../internal/sshconfig/analyze.go), [diff.go](../../internal/sshconfig/diff.go) |
+| Removed group members               | Hosts removed from a group are placed behind the group, not at their original position. The dialog warns if this changes effective values.                                                                                                                          | [main.js](../../frontend/src/main.js)                                                          |
+
+## Operations and security
+
+- **Backups:** one `<file>.bak-YYYYMMDD-HHMMSS` per file and session, only the newest one kept by default; both configurable in the settings, backups can be disabled. Backups of `~/.ssh/config` stay in `~/.ssh` with the original mode.
+- **No secrets in the repository.** `config.template` (real server data) and all `config.*` files except `config.example` are excluded by [.gitignore](../../.gitignore). [wails.json](../../wails.json) contains the author's name and e-mail; they end up in the Windows file metadata.
+- **`Match exec`** runs shell commands from the configuration only after a confirmation that shows the command, only for commands of the displayed host, with a 10-second limit and in a separate process group.
+- **Code signing** is prepared in the release workflow but needs an Apple Developer account and an Azure Artifact Signing account; until their secrets are configured, release builds are unsigned (see [Setup](setup.md#code-signing)).
+- **macOS bundle id** is `de.netinventors.gosshpher` ([build/darwin/Info.plist](../../build/darwin/Info.plist)). Changing it later resets macOS preferences and permissions of the app.
+- **Product version** is not set in `wails.json`; the release workflow sets it from the git tag. Local builds use the Wails default.
+
+## Maintenance
+
+- The Wails CLI should be installed in the version used by `go.mod` (v2.17.1) to avoid generator differences.
+- [build/README.md](../../build/README.md) is the unchanged Wails template text.
+- No TODO or FIXME markers in the code.
+
+## Design decisions
+
+| Decision                                                                         | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Match exec` commands are never run automatically, not even as an opt-in setting | A setting would apply to every opened file, including foreign ones: opening a file would run its shell commands. The evaluation also runs on every keystroke for all aliases. Assuming results and running a single command after confirmation covers the few `exec` lines a configuration usually has. Possible later, without new risk: remembering run results per file, and running all commands of one host after a single confirmation. |
+| Included files open in a second process                                          | Wails v2 has one window per process; a separate instance also keeps history, saving and backups per file.                                                                                                                                                                                                                                                                                                                                     |
+| Sorting only changes the display                                                 | In ssh the first value found wins, so the order in the file is part of the configuration.                                                                                                                                                                                                                                                                                                                                                     |
+| A group is always one contiguous run of blocks                                   | The comment markers `# [Name] start/end` can only describe a contiguous run; all group operations keep this invariant.                                                                                                                                                                                                                                                                                                                        |
+| Issues and notes are language-neutral codes                                      | The core library stays independent of the UI language; texts come from the translation catalogs.                                                                                                                                                                                                                                                                                                                                              |
+
+[Index](index.md) · [Deutsch](../de/limitations.md)

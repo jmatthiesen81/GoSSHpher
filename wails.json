@@ -1,0 +1,17 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "GoSSHpher",
+  "outputfilename": "gosshpher",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Jan Matthiesen",
+    "email": "jm@netinventors.de"
+  },
+  "info": {
+    "productName": "GoSSHpher",
+    "comments": "Grafischer Editor für SSH-Client-Konfigurationen"
+  }
+}

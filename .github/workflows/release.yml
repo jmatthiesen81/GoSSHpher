@@ -1,0 +1,283 @@
+name: Release
+
+# Builds GoSSHpher for Linux, Windows and macOS.
+# - Tag push "1.2.3" (or "1.2.3-rc.1"): builds with that version and creates a GitHub release
+#   (marked as pre-release when the tag has a "-" suffix).
+# - Manual run (workflow_dispatch): builds with version 0.0.0 and only keeps
+#   the artifacts on the workflow run, no release.
+#
+# Code signing is optional and only runs when its secrets are configured
+# (see docs/en/setup.md, "Code signing"):
+# - macOS: Developer ID Application certificate + notarization (notarytool,
+#   App Store Connect API key). Secrets: MACOS_CERTIFICATE (base64 .p12),
+#   MACOS_CERTIFICATE_PASSWORD, APPLE_API_KEY (content of the .p8 file),
+#   APPLE_API_KEY_ID, APPLE_API_ISSUER_ID.
+# - Windows: Azure Artifact Signing via OIDC. Secrets: AZURE_CLIENT_ID,
+#   AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID. Variables: AZURE_SIGNING_ENDPOINT,
+#   AZURE_SIGNING_ACCOUNT, AZURE_CERTIFICATE_PROFILE.
+
+on:
+  push:
+    tags: ["[0-9]+.[0-9]+.[0-9]+", "[0-9]+.[0-9]+.[0-9]+-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test ./...
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-amd64
+            os: ubuntu-24.04
+            platform: linux/amd64
+            tags: webkit2_41
+          - name: windows-amd64
+            os: windows-latest
+            platform: windows/amd64
+            tags: ""
+          - name: macos-universal
+            os: macos-latest
+            platform: darwin/universal
+            tags: ""
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      id-token: write # OIDC login to Azure for Windows signing
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Install Wails CLI (version from go.mod)
+        run: |
+          WAILS_VERSION=$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v2)
+          go install "github.com/wailsapp/wails/v2/cmd/wails@${WAILS_VERSION}"
+
+      - name: Set version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            VERSION="$GITHUB_REF_NAME"
+          else
+            VERSION="0.0.0"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          jq --arg v "$VERSION" '.info.productVersion = $v' wails.json > wails.json.tmp
+          mv wails.json.tmp wails.json
+
+      - name: Build
+        run: |
+          args=(-clean -trimpath -platform "${{ matrix.platform }}")
+          if [[ -n "${{ matrix.tags }}" ]]; then
+            args+=(-tags "${{ matrix.tags }}")
+          fi
+          wails build "${args[@]}"
+          ls -la build/bin
+
+      # Secrets cannot be used in "if:" directly; this step tells the
+      # following steps whether signing is configured.
+      - name: Detect signing configuration
+        id: signing
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        run: |
+          macos=false; windows=false
+          if [[ "$RUNNER_OS" == "macOS" && -n "$MACOS_CERTIFICATE" ]]; then macos=true; fi
+          if [[ "$RUNNER_OS" == "Windows" && -n "$AZURE_CLIENT_ID" ]]; then windows=true; fi
+          echo "macos=$macos" >> "$GITHUB_OUTPUT"
+          echo "windows=$windows" >> "$GITHUB_OUTPUT"
+          echo "signing: macos=$macos windows=$windows"
+
+      - name: Sign and notarize (macOS)
+        if: steps.signing.outputs.macos == 'true'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 24)
+
+          # temporary keychain with the Developer ID Application certificate
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$KEYCHAIN" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          # shellcheck disable=SC2046 # the keychain list is meant to be split
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/certificate.p12"
+
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" | grep -m1 "Developer ID Application" | sed -E 's/.*"(.*)"/\1/')
+          if [[ -z "$IDENTITY" ]]; then
+            echo "No 'Developer ID Application' identity in MACOS_CERTIFICATE" >&2; exit 1
+          fi
+          echo "Signing as: $IDENTITY"
+
+          # hardened runtime is required for notarization; no sandbox, the
+          # app must be able to edit ~/.ssh/config
+          APP=$(ls -d build/bin/*.app)
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
+          codesign --verify --strict --verbose=2 "$APP"
+
+          # notarize with an App Store Connect API key and staple the ticket
+          echo "$APPLE_API_KEY" > "$RUNNER_TEMP/AuthKey.p8"
+          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarize.zip"
+          RESULT=$(xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+            --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID" \
+            --wait --output-format json)
+          echo "$RESULT"
+          STATUS=$(echo "$RESULT" | jq -r .status)
+          if [[ "$STATUS" != "Accepted" ]]; then
+            xcrun notarytool log "$(echo "$RESULT" | jq -r .id)" \
+              --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID" || true
+            exit 1
+          fi
+          xcrun stapler staple "$APP"
+          spctl --assess --type execute --verbose "$APP"
+
+      - name: Remove signing keychain (macOS)
+        if: always() && steps.signing.outputs.macos == 'true'
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP/AuthKey.p8" "$RUNNER_TEMP/notarize.zip"
+
+      - name: Azure login (Windows signing)
+        if: steps.signing.outputs.windows == 'true'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign (Windows)
+        if: steps.signing.outputs.windows == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.AZURE_CERTIFICATE_PROFILE }}
+          files: ${{ github.workspace }}\build\bin\gosshpher.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+          description: GoSSHpher
+          description-url: https://github.com/${{ github.repository }}
+
+      - name: Verify signature (Windows)
+        if: steps.signing.outputs.windows == 'true'
+        shell: pwsh
+        run: |
+          $sig = Get-AuthenticodeSignature build/bin/gosshpher.exe
+          $sig | Format-List Status, StatusMessage, SignerCertificate
+          if ($sig.Status -ne 'Valid') { exit 1 }
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          # same layout as the repository, so scripts/install-linux.sh works
+          # directly from the extracted archive
+          DIR="gosshpher-${{ steps.version.outputs.version }}-${{ matrix.name }}"
+          mkdir -p "dist/$DIR/build/bin" "dist/$DIR/scripts"
+          cp build/bin/gosshpher "dist/$DIR/build/bin/"
+          cp -r build/linux "dist/$DIR/build/"
+          cp scripts/install-linux.sh "dist/$DIR/scripts/"
+          cp LICENSE README.md config.example "dist/$DIR/"
+          tar -C dist -czf "dist/$DIR.tar.gz" "$DIR"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dir = "gosshpher-${{ steps.version.outputs.version }}-${{ matrix.name }}"
+          New-Item -ItemType Directory -Force -Path "dist/$dir" | Out-Null
+          Copy-Item build/bin/gosshpher.exe, LICENSE, README.md, config.example "dist/$dir/"
+          Compress-Archive -Path "dist/$dir" -DestinationPath "dist/$dir.zip"
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          DIR="gosshpher-${{ steps.version.outputs.version }}-${{ matrix.name }}"
+          mkdir -p "dist/$DIR"
+          cp -R build/bin/*.app "dist/$DIR/"
+          cp LICENSE README.md config.example "dist/$DIR/"
+          # ditto keeps the bundle structure and extended attributes
+          ditto -c -k --keepParent "dist/$DIR" "dist/$DIR.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+          if-no-files-found: error
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum -- * > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          args=()
+          # tags with a suffix (1.2.3-rc.1) are pre-releases
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "GoSSHpher $GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag \
+            "${args[@]}"

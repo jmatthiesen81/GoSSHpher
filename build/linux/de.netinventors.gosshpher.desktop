@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=GoSSHpher
+GenericName=SSH Config Editor
+GenericName[de]=SSH-Konfigurationseditor
+Comment=Edit your SSH client configuration (~/.ssh/config)
+Comment[de]=SSH-Client-Konfiguration (~/.ssh/config) grafisch bearbeiten
+Exec=gosshpher %f
+Icon=gosshpher
+Terminal=false
+Categories=Development;
+Keywords=ssh;config;openssh;host;
+Keywords[de]=ssh;konfiguration;openssh;host;
+StartupWMClass=de.netinventors.gosshpher
+StartupNotify=true
