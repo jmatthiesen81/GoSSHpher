@@ -6,7 +6,7 @@ A guide to the GoSSHpher window: editing blocks, groups, the effective configura
 
 | Area             | Content                                                                                                                                 |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Toolbar          | Open, *Save* with a ▾ menu for *Save as…*, ↻ (reload), ↶ ↷ (undo/redo), file path, unsaved marker, tabs *Editor* / *Text*, ⚙ (settings) |
+| Toolbar          | Open, *Save* with a ▾ menu for *Save as…*, ↶ ↷ (undo/redo), ↻ (reload), file path, unsaved marker, tabs *Editor* / *Text*, ⚙ (settings) |
 | Left: host list  | All blocks with position number, aliases, `user@hostname:port`; filter, sorting, groups; buttons *+ Host*, *+ Match*, *+ Group*         |
 | Middle: editor   | The selected block: patterns, group, comment, options                                                                                   |
 | Right: inspector | Tab *Effective* (effective configuration) and tab *Hints*                                                                               |

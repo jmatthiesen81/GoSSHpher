@@ -6,7 +6,7 @@ Eine Anleitung für das GoSSHpher-Fenster: Blöcke bearbeiten, Gruppen, effektiv
 
 | Bereich           | Inhalt                                                                                                                                                                                               |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Werkzeugleiste    | Öffnen, *Speichern* mit ▾-Menü für *Speichern unter…*, ↻ (neu laden), ↶ ↷ (rückgängig/wiederholen), Dateipfad, Markierung für ungespeicherte Änderungen, Reiter *Editor* / *Text*, ⚙ (Einstellungen) |
+| Werkzeugleiste    | Öffnen, *Speichern* mit ▾-Menü für *Speichern unter…*, ↶ ↷ (rückgängig/wiederholen), ↻ (neu laden), Dateipfad, Markierung für ungespeicherte Änderungen, Reiter *Editor* / *Text*, ⚙ (Einstellungen) |
 | Links: Host-Liste | Alle Blöcke mit Positionsnummer, Aliasen, `user@hostname:port`; Filter, Sortierung, Gruppen; Buttons *+ Host*, *+ Match*, *+ Gruppe*                                                                 |
 | Mitte: Editor     | Der ausgewählte Block: Muster, Gruppe, Kommentar, Optionen                                                                                                                                           |
 | Rechts: Inspector | Reiter *Effektiv* (effektive Konfiguration) und Reiter *Hinweise*                                                                                                                                    |
