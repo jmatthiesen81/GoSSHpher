@@ -1,7 +1,7 @@
 // Host list: rows in file order or sorted, groups, drag and drop.
 
 import {esc, t, th} from './i18n';
-import {moveBlockTo, select} from './editor';
+import {blockAction, connectHost, moveBlockTo, select} from './editor';
 import {groupKey, groupMembers, groupNames, moveGroupTo, renameGroup, setBlockGroup, toggleGroup, ungroup} from './groups';
 import {$, blockIndex, collator, hasPreamble, isGlobalHost, optionValue, preambleHasOptions, S, splitPatterns} from './state';
 import {issuesFor, matchesFilter, worstSeverity} from './sync';
@@ -174,7 +174,15 @@ export function renderSidebar() {
         }
         li.innerHTML = `<span class="idx" title="${th('sidebar.position')}">${idx}</span>
             <div class="block-text"><div class="block-title">${title}</div><div class="block-sub">${sub}</div></div>
-            ${sev ? `<span class="dot ${sev}" title="${th('sidebar.hasHints')}"></span>` : ''}`;
+            ${sev ? `<span class="dot ${sev}" title="${th('sidebar.hasHints')}"></span>` : ''}
+            ${b.kind === 'global' ? '' : `<button class="more" title="${th('menu.more')}" aria-label="${th('menu.more')}"
+                aria-haspopup="menu" aria-expanded="${blockMenuFor === b.id}" draggable="false">⋮</button>`}`;
+        if (blockMenuFor === b.id) li.classList.add('menu-open');
+        li.querySelector('.more')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            if (blockMenuFor === b.id) closeBlockMenu();
+            else openBlockMenu(b, ev.currentTarget);
+        });
         li.addEventListener('click', () => select(b.id));
         if (li.draggable) {
             li.addEventListener('dragstart', (ev) => {
@@ -221,4 +229,85 @@ export function renderSidebar() {
         list.appendChild(li);
     }
     $('sort').value = S.sort;
+}
+
+// ---- per-entry menu (⋮) ----
+
+let blockMenuFor = null; // id of the block whose menu is open
+
+export function closeBlockMenu() {
+    const menu = $('block-menu');
+    if (!menu || menu.hidden) return;
+    menu.hidden = true;
+    const li = document.querySelector(`.block-item[data-id="${blockMenuFor}"]`);
+    li?.classList.remove('menu-open');
+    li?.querySelector('.more')?.setAttribute('aria-expanded', 'false');
+    blockMenuFor = null;
+}
+
+function setupBlockMenu() {
+    const menu = document.createElement('div');
+    menu.id = 'block-menu';
+    menu.className = 'menu floating';
+    menu.setAttribute('role', 'menu');
+    menu.hidden = true;
+    document.body.appendChild(menu);
+    menu.addEventListener('click', (ev) => {
+        const item = ev.target.closest('[data-act]');
+        if (!item || item.disabled) return;
+        const b = S.config.blocks.find((x) => x.id === blockMenuFor);
+        const anchor = document.querySelector(`.block-item[data-id="${blockMenuFor}"] .more`);
+        closeBlockMenu();
+        anchor?.focus();
+        if (b) blockAction(item.dataset.act, b);
+    });
+    menu.addEventListener('keydown', (ev) => {
+        const items = [...menu.querySelectorAll('[role="menuitem"]:not(:disabled)')];
+        const i = items.indexOf(document.activeElement);
+        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+            ev.preventDefault();
+            const d = ev.key === 'ArrowDown' ? 1 : -1;
+            items[(i + d + items.length) % items.length]?.focus();
+        } else if (ev.key === 'Escape' || ev.key === 'Tab') {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const anchor = document.querySelector(`.block-item[data-id="${blockMenuFor}"] .more`);
+            closeBlockMenu();
+            anchor?.focus();
+        }
+    });
+    document.addEventListener('click', (ev) => {
+        if (!ev.target.closest('#block-menu')) closeBlockMenu();
+    });
+    $('blocks').addEventListener('scroll', closeBlockMenu);
+    window.addEventListener('resize', closeBlockMenu);
+    window.addEventListener('blur', closeBlockMenu);
+    return menu;
+}
+
+export function openBlockMenu(b, anchor) {
+    const menu = $('block-menu') || setupBlockMenu();
+    closeBlockMenu();
+    const host = connectHost(b);
+    const item = (act, label, {disabled = false, title = '', cls = ''} = {}) =>
+        `<button role="menuitem" data-act="${act}" class="${cls}" ${disabled ? 'disabled' : ''} ${title ? `title="${title}"` : ''}>${label}</button>`;
+    menu.innerHTML = [
+        b.kind === 'host' ? item('connect', `<span class="mi">▶</span>${th('menu.connect')}${host ? ` <code>${esc(host)}</code>` : ''}`,
+            {disabled: !host, title: host ? '' : th('menu.connect.disabled')}) : '',
+        item('dup', `<span class="mi">⧉</span>${th('editor.duplicate')}`),
+        '<div class="menu-sep" role="separator"></div>',
+        item('del', `<span class="mi">✕</span>${th('editor.delete')}`, {cls: 'danger'}),
+    ].join('');
+    blockMenuFor = b.id;
+    anchor.closest('.block-item')?.classList.add('menu-open');
+    anchor.setAttribute('aria-expanded', 'true');
+    menu.hidden = false;
+    // fixed position below the button, right-aligned, flipped up near the bottom
+    const r = anchor.getBoundingClientRect();
+    const m = menu.getBoundingClientRect();
+    const left = Math.max(4, Math.min(r.right - m.width, window.innerWidth - m.width - 4));
+    const top = r.bottom + 4 + m.height > window.innerHeight ? r.top - 4 - m.height : r.bottom + 4;
+    menu.style.left = left + 'px';
+    menu.style.top = Math.max(4, top) + 'px';
+    menu.querySelector('[role="menuitem"]:not(:disabled)')?.focus();
 }

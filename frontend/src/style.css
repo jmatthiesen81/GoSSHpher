@@ -457,6 +457,30 @@ img, svg { -webkit-user-drag: none; }
 
 button.icon { padding: 4px 9px; font-size: 15px; line-height: 1; }
 
+/* per-entry menu in the host list */
+.block-item .more {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1;
+    border-radius: 4px;
+    visibility: hidden;
+}
+.block-item:hover .more, .block-item.selected .more, .block-item.menu-open .more, .block-item .more:focus-visible { visibility: visible; }
+.block-item .more:hover, .block-item.menu-open .more { background: var(--border); color: var(--text); }
+.menu.floating { position: fixed; top: 0; left: 0; min-width: 200px; z-index: 30; }
+.menu [role="menuitem"]:disabled { color: var(--muted); background: none; cursor: default; }
+.menu [role="menuitem"].danger:not(:disabled) { color: var(--error); }
+.menu [role="menuitem"] code { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.menu .mi { display: inline-block; width: 18px; color: var(--muted); }
+.menu [role="menuitem"].danger .mi { color: inherit; }
+.menu-sep { height: 1px; margin: 4px 2px; background: var(--border); }
+
 /* ---------------------------------------------- tokens, include, exec --- */
 
 .eff .expanded { font-size: 11px; color: var(--muted); margin-top: 2px; }

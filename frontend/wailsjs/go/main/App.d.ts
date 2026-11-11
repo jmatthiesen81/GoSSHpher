@@ -18,6 +18,8 @@ export function NewID():Promise<string>;
 
 export function Open():Promise<main.State>;
 
+export function OpenTerminal(arg1:string):Promise<void>;
+
 export function OpenWindow(arg1:string):Promise<void>;
 
 export function ParseText(arg1:string):Promise<main.State>;
@@ -36,7 +38,7 @@ export function SaveAs():Promise<main.State>;
 
 export function SaveForce():Promise<main.State>;
 
-export function SaveSettings(arg1:string,arg2:main.BackupSettings):Promise<main.SettingsInfo>;
+export function SaveSettings(arg1:string,arg2:main.BackupSettings,arg3:string):Promise<main.SettingsInfo>;
 
 export function SaveUISettings(arg1:main.UISettings):Promise<void>;
 

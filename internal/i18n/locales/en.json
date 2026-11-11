@@ -292,5 +292,19 @@
   "note.match.execAssumed": "“exec {command}” was not run and is assumed to fail.",
   "editor.include.files": "Included files:",
   "editor.include.none": "No file matches.",
-  "toast.windowOpened": "{file} opened in a new window"
+  "toast.windowOpened": "{file} opened in a new window",
+  "error.terminalHost": "Cannot connect to “{host}”: a single host name without wildcards is needed.",
+  "error.noTerminal": "No terminal program found. Set one in the settings.",
+  "terminal.failed": "ssh exited with status {status}. Press Enter to close this window.",
+  "settings.terminal": "Terminal",
+  "settings.terminal.placeholder": "automatic",
+  "settings.terminal.hint": "Program that opens the ssh connection, e.g. “kitty”, “gnome-terminal --” or “konsole -e”. The command to run is appended. Empty = detect automatically.",
+  "menu.more": "More actions",
+  "menu.connect": "Connect in terminal",
+  "menu.connect.disabled": "Only for Host blocks with a host name without wildcards",
+  "connect.unsaved.title": "Save changes first?",
+  "connect.unsaved.text": "ssh reads the file from disk. Unsaved changes are not used for this connection.",
+  "connect.saveAndConnect": "Save and connect",
+  "connect.connectAnyway": "Connect without saving",
+  "toast.terminalOpened": "Terminal opened: ssh {host}"
 }

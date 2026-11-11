@@ -9,6 +9,7 @@ import {recordChange, resetHistory} from './history';
 
 // ---------------------------------------------------------- file actions ---
 
+// doSave saves the file and returns whether it was saved.
 export async function doSave(saveAs = false) {
     await flush();
     try {
@@ -16,6 +17,7 @@ export async function doSave(saveAs = false) {
         applyState(st, {replaceConfig: false});
         renderStatus();
         toast(saveAs ? t('toast.savedAs', {path: S.path}) : t('toast.saved'));
+        return true;
     } catch (e) {
         const msg = String(e?.message || e);
         if (msg.includes('CONFLICT')) {
@@ -26,6 +28,7 @@ export async function doSave(saveAs = false) {
                 applyState(st, {replaceConfig: false});
                 renderStatus();
                 toast(t('toast.saved'));
+                return true;
             } else if (r === 1) {
                 applyState(await Go.Reload());
                 resetHistory();
@@ -34,6 +37,7 @@ export async function doSave(saveAs = false) {
         } else {
             showError(e);
         }
+        return false;
     }
 }
 

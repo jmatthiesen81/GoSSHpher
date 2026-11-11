@@ -7,8 +7,9 @@ import {fileName} from './effective';
 import {openFileWindow, renderEffective} from './inspector';
 import {renderSidebar} from './sidebar';
 import {$, blockIndex, blockTitle, isGlobalHost, isWildcard, kw, preambleHasOptions, S, selectedBlock, splitPatterns} from './state';
-import {issuesFor, renderAll, scheduleSync, showError, worstSeverity} from './sync';
-import {issueText, kwDesc, kwDescHtml, modal} from './ui';
+import {flush, issuesFor, renderAll, scheduleSync, showError, worstSeverity} from './sync';
+import {doSave} from './files';
+import {issueText, kwDesc, kwDescHtml, modal, toast} from './ui';
 
 export function select(id, {pattern = null} = {}) {
     if (S.selected !== id) {
@@ -55,6 +56,8 @@ export function renderEditor() {
                 <button data-act="up" ${idx <= 1 && !b.group ? 'disabled' : ''} title="${th('editor.up')}">↑</button>
                 <button data-act="down" ${idx >= last && !b.group ? 'disabled' : ''} title="${th('editor.down')}">↓</button>
                 <button data-act="last" ${idx >= last ? 'disabled' : ''} title="${th('editor.last')}">⇊</button>
+                ${isMatch ? '' : `<button data-act="connect" ${connectHost(b) ? '' : 'disabled'}
+                    title="${th(connectHost(b) ? 'menu.connect' : 'menu.connect.disabled')}">${th('menu.connect')}</button>`}
                 <button data-act="dup" title="${th('editor.duplicate')}">${th('editor.duplicate')}</button>
                 <button data-act="del" class="danger" title="${th('editor.delete.title')}">${th('editor.delete')}</button>
             </div>
@@ -305,8 +308,37 @@ export function ensureSeparators() {
     });
 }
 
-export async function blockAction(act) {
-    const b = selectedBlock();
+// connectHost is the host name "Connect in terminal" uses: the first pattern
+// of a Host block that is neither a wildcard nor negated, or '' if none.
+export function connectHost(b) {
+    if (!b || b.kind !== 'host') return '';
+    return splitPatterns(b.patterns).find((p) => !isWildcard(p)) || '';
+}
+
+// connectBlock opens a terminal with "ssh <host>". ssh reads the file from
+// disk, so unsaved changes are saved first if the user wants.
+export async function connectBlock(b) {
+    const host = connectHost(b);
+    if (!host) return;
+    await flush();
+    if (S.dirty) {
+        const r = await modal(t('connect.unsaved.title'), t('connect.unsaved.text'),
+            [t('connect.saveAndConnect'), t('connect.connectAnyway'), t('common.cancel')]);
+        if (r === 2) return;
+        if (r === 0 && !(await doSave(false))) return;
+    }
+    try {
+        await Go.OpenTerminal(host);
+        toast(t('toast.terminalOpened', {host}));
+    } catch (e) {
+        showError(e);
+    }
+}
+
+// blockAction runs a block action on the selected block or on the given one
+// (actions from the host list menu).
+export async function blockAction(act, b = selectedBlock()) {
+    if (!b) return;
     const idx = blockIndex(b.id);
     switch (act) {
         case 'first': return moveBlockTo(b.id, 1);
@@ -354,11 +386,14 @@ export async function blockAction(act) {
             const ok = await modal(t('block.delete.title'), t('block.delete.text', {name: blockTitle(b)}), [t('editor.delete'), t('common.cancel')]);
             if (ok !== 0) return;
             S.config.blocks.splice(idx, 1);
-            const next = S.config.blocks[Math.min(idx, S.config.blocks.length - 1)];
-            S.selected = next.id;
+            if (S.selected === b.id) {
+                const next = S.config.blocks[Math.min(idx, S.config.blocks.length - 1)];
+                S.selected = next.id;
+            }
             renderAll();
             return scheduleSync(0);
         }
+        case 'connect': return connectBlock(b);
     }
 }
 

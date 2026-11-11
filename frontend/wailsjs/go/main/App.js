@@ -30,6 +30,10 @@ export function Open() {
   return window['go']['main']['App']['Open']();
 }
 
+export function OpenTerminal(arg1) {
+  return window['go']['main']['App']['OpenTerminal'](arg1);
+}
+
 export function OpenWindow(arg1) {
   return window['go']['main']['App']['OpenWindow'](arg1);
 }
@@ -66,8 +70,8 @@ export function SaveForce() {
   return window['go']['main']['App']['SaveForce']();
 }
 
-export function SaveSettings(arg1, arg2) {
-  return window['go']['main']['App']['SaveSettings'](arg1, arg2);
+export function SaveSettings(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SaveSettings'](arg1, arg2, arg3);
 }
 
 export function SaveUISettings(arg1) {

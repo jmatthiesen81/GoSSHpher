@@ -292,5 +292,19 @@
   "note.match.execAssumed": "„exec {command}“ wurde nicht ausgeführt und gilt als fehlgeschlagen.",
   "editor.include.files": "Eingebundene Dateien:",
   "editor.include.none": "Keine passende Datei.",
-  "toast.windowOpened": "{file} in neuem Fenster geöffnet"
+  "toast.windowOpened": "{file} in neuem Fenster geöffnet",
+  "error.terminalHost": "Mit „{host}“ kann nicht verbunden werden: Es wird ein einzelner Hostname ohne Platzhalter benötigt.",
+  "error.noTerminal": "Kein Terminalprogramm gefunden. Lege eines in den Einstellungen fest.",
+  "terminal.failed": "ssh wurde mit Status {status} beendet. Enter schließt dieses Fenster.",
+  "settings.terminal": "Terminal",
+  "settings.terminal.placeholder": "automatisch",
+  "settings.terminal.hint": "Programm, das die ssh-Verbindung öffnet, z. B. „kitty“, „gnome-terminal --“ oder „konsole -e“. Der auszuführende Befehl wird angehängt. Leer = automatisch erkennen.",
+  "menu.more": "Weitere Aktionen",
+  "menu.connect": "Im Terminal verbinden",
+  "menu.connect.disabled": "Nur für Host-Blöcke mit einem Hostnamen ohne Platzhalter",
+  "connect.unsaved.title": "Änderungen zuerst speichern?",
+  "connect.unsaved.text": "ssh liest die Datei von der Festplatte. Ungespeicherte Änderungen gelten für diese Verbindung nicht.",
+  "connect.saveAndConnect": "Speichern und verbinden",
+  "connect.connectAnyway": "Ohne Speichern verbinden",
+  "toast.terminalOpened": "Terminal geöffnet: ssh {host}"
 }

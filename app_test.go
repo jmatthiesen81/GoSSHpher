@@ -151,9 +151,9 @@ func TestSettings(t *testing.T) {
 	}
 
 	// explicit save writes the file with mode 0600
-	info, err := app.SaveSettings("xx", BackupSettings{Enabled: false, Keep: 3})
+	info, err := app.SaveSettings("xx", BackupSettings{Enabled: false, Keep: 3}, "  kitty  ")
 	if err != nil || info.Settings.Backup.Enabled || info.Settings.Backup.Keep != 3 || info.Settings.UI.Sort != "alias" ||
-		info.Settings.Language != "en" {
+		info.Settings.Language != "en" || info.Settings.Terminal != "kitty" {
 		t.Fatalf("save: %+v %v", info, err)
 	}
 	if fi, _ := os.Stat(path); fi.Mode().Perm() != 0o600 {

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gosshpher/internal/i18n"
 )
@@ -32,7 +33,10 @@ type Settings struct {
 	// Language of the user interface, e.g. "en" or "de".
 	Language string         `json:"language"`
 	Backup   BackupSettings `json:"backup"`
-	UI       UISettings     `json:"ui"`
+	// Terminal is the program that opens an ssh connection, with optional
+	// arguments; the command to run is appended. Empty detects one.
+	Terminal string     `json:"terminal,omitempty"`
+	UI       UISettings `json:"ui"`
 }
 
 // AppID identifies the application on every platform: macOS bundle id,
@@ -61,6 +65,7 @@ func (s *Settings) normalize() {
 	if s.Backup.Keep > 1000 {
 		s.Backup.Keep = 1000
 	}
+	s.Terminal = strings.TrimSpace(s.Terminal)
 }
 
 // loadSettings reads the settings file; a missing file yields the defaults.
@@ -130,14 +135,15 @@ func (a *App) GetSettings() SettingsInfo {
 	return SettingsInfo{Settings: a.settings, Path: a.settingsPath, Error: a.settingsErr}
 }
 
-// SaveSettings stores the language and backup settings (the view settings
-// are kept).
-func (a *App) SaveSettings(language string, backup BackupSettings) (SettingsInfo, error) {
+// SaveSettings stores the language, backup and terminal settings (the view
+// settings are kept).
+func (a *App) SaveSettings(language string, backup BackupSettings, terminal string) (SettingsInfo, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	s := a.settings
 	s.Language = language
 	s.Backup = backup
+	s.Terminal = terminal
 	s.normalize()
 	if err := saveSettings(a.settingsPath, s); err != nil {
 		return SettingsInfo{}, err

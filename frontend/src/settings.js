@@ -16,6 +16,7 @@ export function openSettings() {
     $('set-backup').checked = info.settings.backup.enabled;
     $('set-keep').value = info.settings.backup.keep;
     $('set-keep').disabled = !info.settings.backup.enabled;
+    $('set-terminal').value = info.settings.terminal || '';
     $('set-path').textContent = info.path || t('settings.noDir');
     $('set-error').textContent = info.error ? t('settings.readError', {error: info.error}) : '';
     $('set-error').hidden = !info.error;
@@ -32,7 +33,7 @@ export async function submitSettings() {
     try {
         const lang = $('set-language').value;
         const changed = lang !== language();
-        S.settingsInfo = await Go.SaveSettings(lang, {enabled: $('set-backup').checked, keep});
+        S.settingsInfo = await Go.SaveSettings(lang, {enabled: $('set-backup').checked, keep}, $('set-terminal').value);
         closeSettings();
         if (changed) await loadLanguage(S.settingsInfo.settings.language);
         toast(t('settings.saved'));

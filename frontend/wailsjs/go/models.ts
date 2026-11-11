@@ -72,6 +72,7 @@ export namespace main {
 	export class Settings {
 	    language: string;
 	    backup: BackupSettings;
+	    terminal?: string;
 	    ui: UISettings;
 	
 	    static createFrom(source: any = {}) {
@@ -82,6 +83,7 @@ export namespace main {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.language = source["language"];
 	        this.backup = this.convertValues(source["backup"], BackupSettings);
+	        this.terminal = source["terminal"];
 	        this.ui = this.convertValues(source["ui"], UISettings);
 	    }
 	
