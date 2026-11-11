@@ -119,6 +119,8 @@
         <label class="field-label" for="set-terminal" data-i18n="settings.terminal">Terminal</label>
         <input id="set-terminal" autocomplete="off" spellcheck="false" data-i18n-placeholder="settings.terminal.placeholder">
         <div class="hint" data-i18n="settings.terminal.hint"></div>
+        <label class="check-row"><input type="checkbox" id="set-update"> <span data-i18n="settings.updateCheck">Check for updates at start</span></label>
+        <div class="hint" data-i18n="settings.updateCheck.hint"></div>
         <label class="field-label" data-i18n="settings.path">Stored in</label>
         <code id="set-path" class="path-box"></code>
         <div id="set-error" class="issue error" hidden></div>
@@ -129,6 +131,16 @@
     </div>
 </div>
 <div id="toast" class="toast" hidden></div>
+<div id="update-note" class="update-note" role="status" hidden>
+    <div class="update-text">
+        <strong id="update-title"></strong>
+        <span id="update-sub"></span>
+    </div>
+    <div class="update-actions">
+        <button id="update-open" class="primary" data-i18n="update.open">View release</button>
+        <button id="update-dismiss" data-i18n="update.dismiss" data-i18n-title="update.dismiss.title">Dismiss</button>
+    </div>
+</div>
 
 <datalist id="kw-list"></datalist>
 <div id="datalists"></div>

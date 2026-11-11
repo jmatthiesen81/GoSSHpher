@@ -24,6 +24,8 @@ type UISettings struct {
 	Sort      string         `json:"sort,omitempty"`
 	Collapsed []string       `json:"collapsed,omitempty"`
 	Widths    map[string]int `json:"widths,omitempty"`
+	// DismissedUpdate is the release whose update notice was closed.
+	DismissedUpdate string `json:"dismissedUpdate,omitempty"`
 }
 
 // Settings is stored as JSON in the user's config directory:
@@ -35,8 +37,10 @@ type Settings struct {
 	Backup   BackupSettings `json:"backup"`
 	// Terminal is the program that opens an ssh connection, with optional
 	// arguments; the command to run is appended. Empty detects one.
-	Terminal string     `json:"terminal,omitempty"`
-	UI       UISettings `json:"ui"`
+	Terminal string `json:"terminal,omitempty"`
+	// UpdateCheck asks GitHub for a newer release at start-up.
+	UpdateCheck bool       `json:"updateCheck"`
+	UI          UISettings `json:"ui"`
 }
 
 // AppID identifies the application on every platform: macOS bundle id,
@@ -45,7 +49,7 @@ const AppID = "de.netinventors.gosshpher"
 
 // DefaultSettings are used when no settings file exists yet.
 func DefaultSettings() Settings {
-	return Settings{Language: i18n.Fallback, Backup: BackupSettings{Enabled: true, Keep: 1}}
+	return Settings{Language: i18n.Fallback, Backup: BackupSettings{Enabled: true, Keep: 1}, UpdateCheck: true}
 }
 
 // DefaultSettingsPath returns <user config dir>/de.netinventors.gosshpher/settings.json.
@@ -135,15 +139,13 @@ func (a *App) GetSettings() SettingsInfo {
 	return SettingsInfo{Settings: a.settings, Path: a.settingsPath, Error: a.settingsErr}
 }
 
-// SaveSettings stores the language, backup and terminal settings (the view
-// settings are kept).
-func (a *App) SaveSettings(language string, backup BackupSettings, terminal string) (SettingsInfo, error) {
+// SaveSettings stores the settings of the settings dialog; the view settings
+// (UI) are kept.
+func (a *App) SaveSettings(in Settings) (SettingsInfo, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	s := a.settings
-	s.Language = language
-	s.Backup = backup
-	s.Terminal = terminal
+	s := in
+	s.UI = a.settings.UI
 	s.normalize()
 	if err := saveSettings(a.settingsPath, s); err != nil {
 		return SettingsInfo{}, err

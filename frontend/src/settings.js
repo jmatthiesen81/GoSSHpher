@@ -6,6 +6,7 @@ import {gdValidate} from './groupDialog';
 import {$, S, setCollator} from './state';
 import {renderAll, showError} from './sync';
 import {setupDatalists, toast} from './ui';
+import {renderUpdateNotice} from './update';
 
 // ---- settings dialog ----
 
@@ -17,6 +18,7 @@ export function openSettings() {
     $('set-keep').value = info.settings.backup.keep;
     $('set-keep').disabled = !info.settings.backup.enabled;
     $('set-terminal').value = info.settings.terminal || '';
+    $('set-update').checked = info.settings.updateCheck;
     $('set-path').textContent = info.path || t('settings.noDir');
     $('set-error').textContent = info.error ? t('settings.readError', {error: info.error}) : '';
     $('set-error').hidden = !info.error;
@@ -33,7 +35,13 @@ export async function submitSettings() {
     try {
         const lang = $('set-language').value;
         const changed = lang !== language();
-        S.settingsInfo = await Go.SaveSettings(lang, {enabled: $('set-backup').checked, keep}, $('set-terminal').value);
+        S.settingsInfo = await Go.SaveSettings({
+            ...S.settingsInfo.settings,
+            language: lang,
+            backup: {enabled: $('set-backup').checked, keep},
+            terminal: $('set-terminal').value,
+            updateCheck: $('set-update').checked,
+        });
         closeSettings();
         if (changed) await loadLanguage(S.settingsInfo.settings.language);
         toast(t('settings.saved'));
@@ -66,5 +74,6 @@ export async function loadLanguage(lang, {render = true} = {}) {
     if (!render || !S.ready) return;
     setupDatalists(S.keywords);
     renderAll();
+    renderUpdateNotice();
     if (!$('gdialog').hidden) gdValidate();
 }

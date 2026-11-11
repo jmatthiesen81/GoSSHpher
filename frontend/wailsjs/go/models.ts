@@ -57,6 +57,7 @@ export namespace main {
 	    sort?: string;
 	    collapsed?: string[];
 	    widths?: Record<string, number>;
+	    dismissedUpdate?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new UISettings(source);
@@ -67,12 +68,14 @@ export namespace main {
 	        this.sort = source["sort"];
 	        this.collapsed = source["collapsed"];
 	        this.widths = source["widths"];
+	        this.dismissedUpdate = source["dismissedUpdate"];
 	    }
 	}
 	export class Settings {
 	    language: string;
 	    backup: BackupSettings;
 	    terminal?: string;
+	    updateCheck: boolean;
 	    ui: UISettings;
 	
 	    static createFrom(source: any = {}) {
@@ -84,6 +87,7 @@ export namespace main {
 	        this.language = source["language"];
 	        this.backup = this.convertValues(source["backup"], BackupSettings);
 	        this.terminal = source["terminal"];
+	        this.updateCheck = source["updateCheck"];
 	        this.ui = this.convertValues(source["ui"], UISettings);
 	    }
 	
@@ -180,6 +184,25 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	
+	export class UpdateInfo {
+	    current: string;
+	    latest?: string;
+	    url?: string;
+	    available: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.current = source["current"];
+	        this.latest = source["latest"];
+	        this.url = source["url"];
+	        this.available = source["available"];
+	    }
 	}
 
 }

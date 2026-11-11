@@ -95,13 +95,19 @@ Der Reiter *Hinweise* listet alle Befunde nach Schweregrad; ein Klick wählt Blo
 
 ⚙ in der Werkzeugleiste öffnet die Einstellungen:
 
-| Einstellung                                | Wirkung                                       |
-| ------------------------------------------ | --------------------------------------------- |
-| *Sprache*                                  | Sprache der Oberfläche; wirkt sofort          |
-| *Vor dem Überschreiben ein Backup anlegen* | Schaltet Backups ein oder aus                 |
-| *Backups pro Datei behalten*               | Anzahl der Backups pro Datei; `0` behält alle |
+| Einstellung                                | Wirkung                                                                                          |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| *Sprache*                                  | Sprache der Oberfläche; wirkt sofort                                                             |
+| *Vor dem Überschreiben ein Backup anlegen* | Schaltet Backups ein oder aus                                                                    |
+| *Backups pro Datei behalten*               | Anzahl der Backups pro Datei; `0` behält alle                                                    |
+| *Terminal*                                 | Programm für *Im Terminal verbinden*, z. B. `kitty` oder `gnome-terminal --`; leer = automatisch |
+| *Beim Start nach Updates suchen*           | Fragt beim Start GitHub nach einem neueren Release (Standard: an)                                |
 
 Der Dialog zeigt außerdem, wo die Einstellungsdatei liegt. Details: [Architektur → Einstellungsdatei](architecture.md#einstellungsdatei).
+
+## Update-Hinweis
+
+Beim Start fragt GoSSHpher im Hintergrund bei GitHub (`api.github.com`) nach dem neuesten Release. Gibt es ein neueres, erscheint unten rechts ein Hinweis mit *Release ansehen* (öffnet die Release-Seite im Browser) und *Ausblenden* (blendet den Hinweis bis zum nächsten Release aus). Die Abfrage blockiert die Anwendung nicht; ohne Internetverbindung bricht sie nach spätestens 5 Sekunden still ab. Entwicklungs-Builds (`dev`, `0.0.0`) fragen nicht nach; abschalten lässt sich die Abfrage in den Einstellungen.
 
 ## Rückgängig und Wiederholen
 

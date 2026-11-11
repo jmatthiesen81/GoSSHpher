@@ -306,5 +306,12 @@
   "connect.unsaved.text": "ssh reads the file from disk. Unsaved changes are not used for this connection.",
   "connect.saveAndConnect": "Save and connect",
   "connect.connectAnyway": "Connect without saving",
-  "toast.terminalOpened": "Terminal opened: ssh {host}"
+  "toast.terminalOpened": "Terminal opened: ssh {host}",
+  "update.available": "GoSSHpher {latest} is available",
+  "update.current": "You are using version {current}.",
+  "update.open": "View release",
+  "update.dismiss": "Dismiss",
+  "update.dismiss.title": "Hide this notice until the next release",
+  "settings.updateCheck": "Check for updates at start",
+  "settings.updateCheck.hint": "Asks GitHub (api.github.com) once per start whether a newer release exists. No data besides the request itself is sent."
 }

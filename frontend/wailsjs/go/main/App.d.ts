@@ -4,6 +4,8 @@ import {main} from '../models';
 import {sshconfig} from '../models';
 import {i18n} from '../models';
 
+export function CheckUpdate():Promise<main.UpdateInfo>;
+
 export function GetSettings():Promise<main.SettingsInfo>;
 
 export function GetState():Promise<main.State>;
@@ -38,10 +40,12 @@ export function SaveAs():Promise<main.State>;
 
 export function SaveForce():Promise<main.State>;
 
-export function SaveSettings(arg1:string,arg2:main.BackupSettings,arg3:string):Promise<main.SettingsInfo>;
+export function SaveSettings(arg1:main.Settings):Promise<main.SettingsInfo>;
 
 export function SaveUISettings(arg1:main.UISettings):Promise<void>;
 
 export function Translations(arg1:string):Promise<Record<string, string>>;
 
 export function Update(arg1:sshconfig.Config):Promise<main.State>;
+
+export function Version():Promise<string>;

@@ -306,5 +306,12 @@
   "connect.unsaved.text": "ssh liest die Datei von der Festplatte. Ungespeicherte Änderungen gelten für diese Verbindung nicht.",
   "connect.saveAndConnect": "Speichern und verbinden",
   "connect.connectAnyway": "Ohne Speichern verbinden",
-  "toast.terminalOpened": "Terminal geöffnet: ssh {host}"
+  "toast.terminalOpened": "Terminal geöffnet: ssh {host}",
+  "update.available": "GoSSHpher {latest} ist verfügbar",
+  "update.current": "Du verwendest Version {current}.",
+  "update.open": "Release ansehen",
+  "update.dismiss": "Ausblenden",
+  "update.dismiss.title": "Hinweis bis zum nächsten Release ausblenden",
+  "settings.updateCheck": "Beim Start nach Updates suchen",
+  "settings.updateCheck.hint": "Fragt einmal pro Start bei GitHub (api.github.com) nach, ob es ein neueres Release gibt. Außer der Anfrage selbst werden keine Daten gesendet."
 }

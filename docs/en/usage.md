@@ -95,13 +95,19 @@ The *Hints* tab lists all findings, sorted by severity; clicking one selects the
 
 ⚙ in the toolbar opens the settings:
 
-| Setting                              | Effect                                         |
-| ------------------------------------ | ---------------------------------------------- |
-| *Language*                           | UI language; takes effect immediately          |
-| *Create a backup before overwriting* | Enables or disables backups                    |
-| *Backups kept per file*              | Number of backups kept per file; `0` keeps all |
+| Setting                              | Effect                                                                                    |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| *Language*                           | UI language; takes effect immediately                                                     |
+| *Create a backup before overwriting* | Enables or disables backups                                                               |
+| *Backups kept per file*              | Number of backups kept per file; `0` keeps all                                            |
+| *Terminal*                           | Program for *Connect in terminal*, e.g. `kitty` or `gnome-terminal --`; empty = automatic |
+| *Check for updates at start*         | Asks GitHub for a newer release at start (default: on)                                    |
 
 The dialog also shows where the settings file is stored. Details: [Architecture → Settings file](architecture.md#settings-file).
+
+## Update notice
+
+At start GoSSHpher asks GitHub (`api.github.com`) in the background for the latest release. If there is a newer one, a notice appears in the bottom right corner with *View release* (opens the release page in the browser) and *Dismiss* (hides the notice until the next release). The check never blocks the application; without network it gives up silently after 5 seconds at the latest. Development builds (`dev`, `0.0.0`) do not check; the check can be switched off in the settings.
 
 ## Undo and redo
 

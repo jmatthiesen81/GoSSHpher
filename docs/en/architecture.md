@@ -148,18 +148,22 @@ Settings are stored as JSON in the user's configuration directory (Go's `os.User
 {
   "language": "en",
   "backup": { "enabled": true, "keep": 1 },
+  "updateCheck": true,
   "ui": { "sort": "file", "collapsed": ["gitlab"], "widths": { "side": 300, "insp": 380, "key": 220 } }
 }
 ```
 
-| Key              | Meaning                                                                              | Default         |
-| ---------------- | ------------------------------------------------------------------------------------ | --------------- |
-| `language`       | UI language (`en`, `de`); unknown values fall back to `en`                           | `en`            |
-| `backup.enabled` | Write a backup before overwriting a file                                             | `true`          |
-| `backup.keep`    | Backups kept per file, `0` keeps all (max. 1000)                                     | `1`             |
-| `ui.sort`        | Host list sorting: `file`, `alias`, `hostname`                                       | `file`          |
-| `ui.collapsed`   | Collapsed groups (lower-case names)                                                  | –               |
-| `ui.widths`      | Widths of host list (`side`), inspector (`insp`) and option column (`key`) in pixels | 300 / 380 / 220 |
+| Key                  | Meaning                                                                              | Default         |
+| -------------------- | ------------------------------------------------------------------------------------ | --------------- |
+| `language`           | UI language (`en`, `de`); unknown values fall back to `en`                           | `en`            |
+| `backup.enabled`     | Write a backup before overwriting a file                                             | `true`          |
+| `backup.keep`        | Backups kept per file, `0` keeps all (max. 1000)                                     | `1`             |
+| `terminal`           | Terminal program for *Connect in terminal*, the command is appended; empty = detect  | –               |
+| `updateCheck`        | Ask GitHub for a newer release at start                                              | `true`          |
+| `ui.sort`            | Host list sorting: `file`, `alias`, `hostname`                                       | `file`          |
+| `ui.collapsed`       | Collapsed groups (lower-case names)                                                  | –               |
+| `ui.widths`          | Widths of host list (`side`), inspector (`insp`) and option column (`key`) in pixels | 300 / 380 / 220 |
+| `ui.dismissedUpdate` | Release whose update notice was dismissed                                            | –               |
 
 - The file is created on the first change, with mode `0600` in a directory with mode `0700`, and written atomically. Missing keys fall back to the defaults.
 - If the file exists but cannot be parsed, the defaults are used, the error is shown in the settings dialog, and view settings are not written back, so the file is never overwritten silently. Saving in the settings dialog replaces it.

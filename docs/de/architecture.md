@@ -148,18 +148,22 @@ Die Einstellungen liegen als JSON im Konfigurationsverzeichnis des Benutzers (`o
 {
   "language": "en",
   "backup": { "enabled": true, "keep": 1 },
+  "updateCheck": true,
   "ui": { "sort": "file", "collapsed": ["gitlab"], "widths": { "side": 300, "insp": 380, "key": 220 } }
 }
 ```
 
-| Schlüssel        | Bedeutung                                                                                | Standard        |
-| ---------------- | ---------------------------------------------------------------------------------------- | --------------- |
-| `language`       | Sprache der Oberfläche (`en`, `de`); unbekannte Werte fallen auf `en` zurück             | `en`            |
-| `backup.enabled` | Vor dem Überschreiben einer Datei ein Backup anlegen                                     | `true`          |
-| `backup.keep`    | Backups pro Datei behalten, `0` behält alle (max. 1000)                                  | `1`             |
-| `ui.sort`        | Sortierung der Host-Liste: `file`, `alias`, `hostname`                                   | `file`          |
-| `ui.collapsed`   | Eingeklappte Gruppen (Namen klein geschrieben)                                           | –               |
-| `ui.widths`      | Breiten von Host-Liste (`side`), Inspector (`insp`) und Options-Spalte (`key`) in Pixeln | 300 / 380 / 220 |
+| Schlüssel            | Bedeutung                                                                                | Standard        |
+| -------------------- | ---------------------------------------------------------------------------------------- | --------------- |
+| `language`           | Sprache der Oberfläche (`en`, `de`); unbekannte Werte fallen auf `en` zurück             | `en`            |
+| `backup.enabled`     | Vor dem Überschreiben einer Datei ein Backup anlegen                                     | `true`          |
+| `backup.keep`        | Backups pro Datei behalten, `0` behält alle (max. 1000)                                  | `1`             |
+| `terminal`           | Terminalprogramm für *Im Terminal verbinden*, der Befehl wird angehängt; leer = erkennen | –               |
+| `updateCheck`        | Beim Start bei GitHub nach einem neueren Release fragen                                  | `true`          |
+| `ui.sort`            | Sortierung der Host-Liste: `file`, `alias`, `hostname`                                   | `file`          |
+| `ui.collapsed`       | Eingeklappte Gruppen (Namen klein geschrieben)                                           | –               |
+| `ui.widths`          | Breiten von Host-Liste (`side`), Inspector (`insp`) und Options-Spalte (`key`) in Pixeln | 300 / 380 / 220 |
+| `ui.dismissedUpdate` | Release, dessen Update-Hinweis ausgeblendet wurde                                        | –               |
 
 - Die Datei entsteht bei der ersten Änderung, mit Rechten `0600` in einem Verzeichnis mit `0700`, und wird atomar geschrieben. Fehlende Schlüssel fallen auf die Standardwerte zurück.
 - Existiert die Datei, lässt sich aber nicht lesen, gelten die Standardwerte, der Fehler erscheint im Einstellungsdialog, und Ansichtseinstellungen werden nicht zurückgeschrieben, damit die Datei nie unbemerkt überschrieben wird. Speichern im Einstellungsdialog ersetzt sie.

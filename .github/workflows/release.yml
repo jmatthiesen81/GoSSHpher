@@ -98,7 +98,9 @@ jobs:
 
       - name: Build
         run: |
-          args=(-clean -trimpath -platform "${{ matrix.platform }}")
+          # main.version enables the update check (see update.go)
+          args=(-clean -trimpath -platform "${{ matrix.platform }}"
+                -ldflags "-X main.version=${{ steps.version.outputs.version }}")
           if [[ -n "${{ matrix.tags }}" ]]; then
             args+=(-tags "${{ matrix.tags }}")
           fi

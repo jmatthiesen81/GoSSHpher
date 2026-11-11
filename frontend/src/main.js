@@ -13,6 +13,7 @@ import {$, DEFAULT_WIDTHS, S, selectedBlock, store} from './state';
 import {applyState, matchesFilter, renderAll, showError} from './sync';
 import {setupDatalists, toast} from './ui';
 import {redo, resetHistory, undo} from './history';
+import {checkForUpdate, setupUpdateNotice} from './update';
 
 // ---------------------------------------------------------------- init ---
 
@@ -42,6 +43,8 @@ async function init() {
     applyState(await Go.GetState());
     resetHistory();
     renderAll();
+    setupUpdateNotice();
+    checkForUpdate(); // not awaited: must never delay or block the start
 
     $('btn-save').addEventListener('click', () => doSave(false));
     $('btn-saveas').addEventListener('click', () => {
