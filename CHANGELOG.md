@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/release.sh` prepares a release: it turns `[Unreleased]` into the new version, updates the compare links, commits and creates the tag.
+
 ## [1.2.0] - 2026-11-13
 
 ### Added
