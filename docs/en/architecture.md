@@ -78,6 +78,7 @@ sequenceDiagram
 | `Save()` / `SaveForce()` / `SaveAs()`                                     | Write the file (see below)                                                              |
 | `Open()` / `Reload()`                                                     | Load another file / discard changes                                                     |
 | `GetSettings()` / `SaveSettings(language, backup)` / `SaveUISettings(ui)` | Read the settings, store language and backup options, store view settings               |
+| `GetTemplates()` / `SaveTemplates(list)`                                  | Read the templates from disk / validate and replace all templates                       |
 
 ## Reading and writing rules
 
@@ -167,5 +168,25 @@ Settings are stored as JSON in the user's configuration directory (Go's `os.User
 
 - The file is created on the first change, with mode `0600` in a directory with mode `0700`, and written atomically. Missing keys fall back to the defaults.
 - If the file exists but cannot be parsed, the defaults are used, the error is shown in the settings dialog, and view settings are not written back, so the file is never overwritten silently. Saving in the settings dialog replaces it.
+
+## Template file
+
+Templates are stored in `templates.json` in the same directory as `settings.json` ([templates.go](../../templates.go)). They are kept out of the ssh config on purpose: they belong to the user, apply to every file and must not end up in configs that are shared (dotfiles repositories, team includes).
+
+```json
+{
+  "version": 1,
+  "templates": [
+    { "name": "Server", "kind": "host",
+      "options": [ { "key": "Hostname", "value": "{ip}" }, { "key": "User", "value": "{user=admin}" } ] },
+    { "name": "Customer", "kind": "group", "group": "Customer {customer}",
+      "hosts": [ { "patterns": "bastion.{customer}.example", "options": [ { "key": "Hostname", "value": "{bastion_ip}" } ] } ] }
+  ]
+}
+```
+
+- `kind` is `host` (uses `options`) or `group` (uses `group` and `hosts`). Names are unique per kind (case-insensitive); empty option keys and hosts without patterns are dropped.
+- Placeholders are kept as written and filled in by the frontend ([templates.js](../../frontend/src/templates.js)); a `{` directly after `$` is ssh's `${ENV}` syntax and not a placeholder.
+- The file is read on every `GetTemplates()`, so edits by hand and saves from other windows are picked up. It is written atomically with mode `0600`. If it exists but cannot be parsed, the error is shown in the template manager and the file is never overwritten.
 
 [Index](index.md) · [Deutsch](../de/architecture.md)

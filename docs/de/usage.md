@@ -51,6 +51,37 @@ Beim Bestätigen werden die gewählten Hosts in ihrer bisherigen Datei-Reihenfol
 | ⊘ am Gruppenkopf                                             | Löst die Gruppe auf (die Hosts bleiben)                                                                                           |
 | ▾/▸ am Gruppenkopf                                           | Ein-/Ausklappen                                                                                                                   |
 
+## Templates
+
+Templates füllen Hosts vor. Ein **Host-Template** ist eine Liste von Optionen, ein **Gruppen-Template** ein Gruppenname plus mehrere Host-Blöcke. Templates gehören zum Benutzer, nicht zu einer Datei: Sie liegen in `templates.json` neben der Einstellungsdatei und stehen für jede Config zur Verfügung (siehe [Architektur → Template-Datei](architecture.md#template-datei)).
+
+**Anlegen:**
+
+- Feld *Template* im Editor → *Als Template speichern…* oder ⋮ in der Host-Liste → *Als Template speichern…*: übernimmt die Optionen des Hosts (nicht seine Kommentare).
+- ☆ am Gruppenkopf: übernimmt alle Host-Blöcke der Gruppe als Gruppen-Template.
+- ⚙ → *Templates verwalten…* → *+ Host-Template* / *+ Gruppen-Template*.
+
+**Bearbeiten:** Die Template-Verwaltung (⚙ → *Templates verwalten…* oder *Verwalten…* im Anwenden-Dialog) listet alle Templates; Name, Gruppenname und Inhalt lassen sich bearbeiten, duplizieren und löschen. Der Inhalt wird wie eine ssh-Config geschrieben: ein `Keyword Wert` pro Zeile, Gruppen-Templates mit `Host <Muster>`-Zeilen und den Optionen darunter. Fehler (z. B. eine Option vor der ersten `Host`-Zeile) und unbekannte Keywords werden darunter angezeigt; gespeichert wird erst mit *Speichern*.
+
+**Platzhalter** in Werten (bei Gruppen-Templates auch im Gruppennamen und in den Mustern):
+
+| Platzhalter                | Wert                                                     |
+| -------------------------- | -------------------------------------------------------- |
+| `{alias}`                  | Erster fester Alias des Hosts, z. B. `web1.acme.example` |
+| `{short}`                  | Alias bis zum ersten Punkt, z. B. `web1`                 |
+| `{domain}`                 | Alias ab dem ersten Punkt, z. B. `acme.example`          |
+| `{group}`                  | Gruppe des Hosts                                         |
+| `{name}`, `{name=Vorgabe}` | Wird beim Anwenden abgefragt, optional mit Vorgabewert   |
+
+Die Tokens von ssh wie `%h` und `${HOME}` sind keine Platzhalter und bleiben unverändert; für Werte, die beim Verbinden dem Host folgen sollen (z. B. `IdentityFile ~/.ssh/%h`), sind sie oft die bessere Wahl, weil nichts kopiert wird.
+
+**Anwenden:**
+
+- **Host-Template:** Feld *Template* im Editor eines Host-Blocks oder ⋮ → *Template anwenden…*. Der Dialog fragt Aliase und Variablen ab und zeigt eine Vorschau. Ein Template ohne Platzhalter auf einem Host ohne Werte wird sofort angewendet. Hat der Host schon Werte, weist der Dialog darauf hin, dass seine Optionen **ersetzt** werden (der Button heißt dann *Überschreiben*); Aliase, Gruppe und der Kommentar über dem Block bleiben, Kommentarzeilen zwischen den Optionen gehen verloren.
+- **Gruppen-Template:** *+ Gruppe* → *Aus Template*. Die Variablen werden einmal abgefragt und füllen alle Hosts; die Vorschau zeigt die Gruppe mit ihren Hosts. Die Gruppe kommt ans Ende der Datei (vor ein abschließendes `Host *`). Ungültige oder vorhandene Gruppennamen verhindern das Anlegen, vorhandene Aliase werden angezeigt, und wenn bestehende Hosts andere effektive Werte bekämen, werden diese aufgelistet und erfordern *Trotzdem übernehmen*.
+
+Ein Template wird beim Anwenden kopiert: Spätere Änderungen am Template ändern bestehende Hosts nicht. Das Anwenden lässt sich mit `Strg/⌘+Z` rückgängig machen.
+
 ## Sortieren und Filtern
 
 - **Sortierung:** *Wie in der Datei* (Datei-Reihenfolge, Drag & Drop möglich), *Alias A–Z*, *Hostname A–Z*. Die Sortierung betrifft nur die Anzeige. In sortierten Ansichten stehen globale Blöcke zuerst, dann die Gruppen alphabetisch, dann *Ohne Gruppe*; ein Host, der auf einen anderen Host gezogen wird, kommt in dessen Gruppe.
@@ -104,6 +135,7 @@ Der Reiter *Hinweise* listet alle Befunde nach Schweregrad; ein Klick wählt Blo
 | *Backups pro Datei behalten*               | Anzahl der Backups pro Datei; `0` behält alle                                                    |
 | *Terminal*                                 | Programm für *Im Terminal verbinden*, z. B. `kitty` oder `gnome-terminal --`; leer = automatisch |
 | *Beim Start nach Updates suchen*           | Fragt beim Start GitHub nach einem neueren Release (Standard: an)                                |
+| *Templates verwalten…*                     | Öffnet die Template-Verwaltung (siehe [Templates](#templates))                                   |
 
 Der Dialog zeigt außerdem, wo die Einstellungsdatei liegt. Details: [Architektur → Einstellungsdatei](architecture.md#einstellungsdatei).
 

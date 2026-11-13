@@ -10,6 +10,8 @@ export function GetSettings():Promise<main.SettingsInfo>;
 
 export function GetState():Promise<main.State>;
 
+export function GetTemplates():Promise<main.TemplatesInfo>;
+
 export function IncludeFiles(arg1:string):Promise<Array<string>>;
 
 export function Keywords():Promise<Array<sshconfig.Keyword>>;
@@ -41,6 +43,8 @@ export function SaveAs():Promise<main.State>;
 export function SaveForce():Promise<main.State>;
 
 export function SaveSettings(arg1:main.Settings):Promise<main.SettingsInfo>;
+
+export function SaveTemplates(arg1:Array<main.Template>):Promise<main.TemplatesInfo>;
 
 export function SaveUISettings(arg1:main.UISettings):Promise<void>;
 

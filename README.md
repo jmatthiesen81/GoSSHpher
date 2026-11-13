@@ -4,16 +4,16 @@ A desktop editor for OpenSSH client configuration files (`~/.ssh/config`). It ed
 
 ## Quick facts
 
-|              |                                                                                                                                          |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Language     | Go 1.26 (core and backend), vanilla JavaScript (UI)                                                                                      |
-| Framework    | [Wails v2.17](https://wails.io) with the system WebView, Vite 7 for the frontend                                                         |
-| Platforms    | Linux (WebKitGTK 4.1), macOS, Windows (WebView2)                                                                                         |
-| Key features | Lossless editing, effective configuration like `ssh -G`, shadowed-option checks, groups as comment markers, safe saving with backup      |
-| UI language  | English (default), German; switchable in the settings                                                                                    |
-| App id       | `de.netinventors.gosshpher` (macOS bundle id, settings folder, Linux app id)                                                             |
-| Settings     | `~/.config/de.netinventors.gosshpher/settings.json` (Linux; per-platform paths in [architecture](docs/en/architecture.md#settings-file)) |
-| Releases     | GitHub Actions build Linux, Windows and macOS archives for every version tag (`1.2.3`, no `v` prefix)                                    |
+|              |                                                                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language     | Go 1.26 (core and backend), vanilla JavaScript (UI)                                                                                                           |
+| Framework    | [Wails v2.17](https://wails.io) with the system WebView, Vite 7 for the frontend                                                                              |
+| Platforms    | Linux (WebKitGTK 4.1), macOS, Windows (WebView2)                                                                                                              |
+| Key features | Lossless editing, effective configuration like `ssh -G`, shadowed-option checks, groups as comment markers, host and group templates, safe saving with backup |
+| UI language  | English (default), German; switchable in the settings                                                                                                         |
+| App id       | `de.netinventors.gosshpher` (macOS bundle id, settings folder, Linux app id)                                                                                  |
+| Settings     | `~/.config/de.netinventors.gosshpher/settings.json` (Linux; per-platform paths in [architecture](docs/en/architecture.md#settings-file))                      |
+| Releases     | GitHub Actions build Linux, Windows and macOS archives for every version tag (`1.2.3`, no `v` prefix)                                                         |
 
 ## Quick start
 

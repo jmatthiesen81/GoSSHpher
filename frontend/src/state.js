@@ -18,6 +18,8 @@ export const S = {
     keywords: [],
     kwIndex: new Map(), // lower name -> keyword
     selected: null,    // block id
+    templates: [],         // host and group templates (templates.json)
+    templatesInfo: null,   // {templates, path, error}
     marked: [],        // block ids marked with Ctrl/⌘+click (a contiguous run)
     filter: '',
     view: 'editor',

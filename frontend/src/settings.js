@@ -7,6 +7,7 @@ import {$, S, setCollator} from './state';
 import {renderAll, showError} from './sync';
 import {setupDatalists, toast} from './ui';
 import {renderUpdateNotice} from './update';
+import {openTemplateManager} from './templateDialogs';
 
 // ---- settings dialog ----
 
@@ -55,11 +56,12 @@ export function setupSettings() {
     $('set-backup').addEventListener('change', () => ($('set-keep').disabled = !$('set-backup').checked));
     $('set-ok').addEventListener('click', submitSettings);
     $('set-cancel').addEventListener('click', closeSettings);
+    $('set-templates').addEventListener('click', () => openTemplateManager());
     $('settings').addEventListener('keydown', (ev) => {
         if (ev.key === 'Escape') {
             ev.stopPropagation();
             closeSettings();
-        } else if (ev.key === 'Enter') {
+        } else if (ev.key === 'Enter' && !(ev.target instanceof HTMLButtonElement)) {
             ev.preventDefault();
             submitSettings();
         }

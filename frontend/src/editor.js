@@ -10,6 +10,7 @@ import {$, blockIndex, blockTitle, isGlobalHost, isWildcard, kw, preambleHasOpti
 import {flush, issuesFor, renderAll, scheduleSync, showError, worstSeverity} from './sync';
 import {doSave} from './files';
 import {issueText, kwDesc, kwDescHtml, modal, toast} from './ui';
+import {applyTemplateTo, hostTemplates, openApplyDialog, openTemplateManager, saveBlockAsTemplate} from './templateDialogs';
 
 export function select(id, {pattern = null} = {}) {
     if (S.selected !== id) {
@@ -73,6 +74,16 @@ export function renderEditor() {
             </select>
             ${b.group ? `<button id="btn-rename-group" class="link">${th('editor.group.edit')}</button>` : ''}
         </div>
+        ${isMatch ? '' : `<div class="group-row">
+            <label for="ed-template">${th('editor.template')}</label>
+            <select id="ed-template">
+                <option value="">${th(hostTemplates().length ? 'editor.template.choose' : 'editor.template.none')}</option>
+                ${hostTemplates().map((x) => `<option value="tpl:${esc(x.name)}">${esc(x.name)}</option>`).join('')}
+                <option disabled>──────────</option>
+                <option value="__save">${th('menu.saveTemplate')}</option>
+                <option value="__manage">${th('settings.templates.manage')}</option>
+            </select>
+        </div>`}
         <div class="issue-slot" data-slot="-1"></div>`;
         if (isGlobalHost(b)) {
             const atEnd = idx === last;
@@ -122,6 +133,13 @@ export function renderEditor() {
         });
         $('btn-rename-group')?.addEventListener('click', () => renameGroup(b.group));
     }
+    $('ed-template')?.addEventListener('change', (ev) => {
+        const v = ev.target.value;
+        ev.target.value = '';
+        if (v === '__save') saveBlockAsTemplate(b);
+        else if (v === '__manage') openTemplateManager();
+        else if (v.startsWith('tpl:')) applyTemplateTo(b, v.slice(4));
+    });
     ed.querySelectorAll('.block-actions button').forEach((btn) =>
         btn.addEventListener('click', () => blockAction(btn.dataset.act)));
     $('ed-comment')?.addEventListener('input', (ev) => {
@@ -394,6 +412,8 @@ export async function blockAction(act, b = selectedBlock()) {
             return scheduleSync(0);
         }
         case 'connect': return connectBlock(b);
+        case 'tplSave': return saveBlockAsTemplate(b);
+        case 'tplApply': return openApplyDialog({mode: 'host', blockId: b.id});
     }
 }
 

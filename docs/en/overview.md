@@ -34,6 +34,7 @@ GoSSHpher makes these rules visible: it evaluates the file the way ssh does, exp
 - **Effective configuration** per host, similar to `ssh -G`, including the source block of every value and the values that lost. `Match` (`host`, `originalhost`, `user`, `localuser`, `all`, `final`, `tagged`) and `Include` are evaluated.
 - **Checks:** shadowed options, duplicate options in a block, unknown keywords, patterns with upper-case letters, missing key files, `RemoteCommand … $SHELL` without `RequestTTY`, duplicate group names.
 - **Groups** (one level), stored as comment markers `# [Name] start` / `# [Name] end`. Created and edited in a dialog with host autocompletion; before hosts are moved together, the dialog shows which effective values would change.
+- **Templates** for hosts and whole groups, with placeholders such as `{short}` or `{ip}` that are filled in or asked for when applying; stored per user in `templates.json`, not in the config.
 - **Sorting** of the host list by file order, alias or hostname (display only).
 - **Resizable panes** and option column.
 - **Text view** for editing the raw file.

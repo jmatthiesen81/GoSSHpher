@@ -6,6 +6,7 @@ import {groupKey, groupMembers, groupNames, moveGroupTo, renameGroup, setBlockGr
 import {$, blockIndex, collator, hasPreamble, isGlobalHost, optionValue, preambleHasOptions, S, splitPatterns} from './state';
 import {issuesFor, matchesFilter, worstSeverity} from './sync';
 import {toast} from './ui';
+import {hostTemplates, saveGroupAsTemplate} from './templateDialogs';
 
 // ---- sidebar ----
 
@@ -134,6 +135,7 @@ export function renderSidebar() {
                    <span class="gname">${esc(name)}</span><span class="gcount">${row.count}</span>
                    <span class="gactions">
                      <button data-gact="rename" title="${th('group.edit')}">✎</button>
+                     <button data-gact="template" title="${th('group.saveTemplate')}">☆</button>
                      <button data-gact="ungroup" title="${th('group.ungroup')}">⊘</button>
                    </span>`
                 : `<span class="gname">${th('group.none')}</span><span class="gcount">${row.count}</span>`;
@@ -147,6 +149,7 @@ export function renderSidebar() {
                     const act = ev.target.closest('[data-gact]')?.dataset.gact;
                     if (act === 'rename') renameGroup(name);
                     else if (act === 'ungroup') ungroup(name);
+                    else if (act === 'template') saveGroupAsTemplate(name);
                     else if (!ev.target.closest('button')) toggleGroup(name);
                 });
                 if (fileOrder) {
@@ -350,6 +353,10 @@ export function openBlockMenu(b, anchor) {
         b.kind === 'host' ? item('connect', `<span class="mi">▶</span>${th('menu.connect')}${host ? ` <code>${esc(host)}</code>` : ''}`,
             {disabled: !host, title: host ? '' : th('menu.connect.disabled')}) : '',
         item('dup', `<span class="mi">⧉</span>${th('editor.duplicate')}`),
+        b.kind === 'host' ? '<div class="menu-sep" role="separator"></div>' : '',
+        b.kind === 'host' ? item('tplApply', `<span class="mi">⇲</span>${th('menu.applyTemplate')}`,
+            {disabled: !hostTemplates().length, title: hostTemplates().length ? '' : th('ta.noHostTemplates')}) : '',
+        b.kind === 'host' ? item('tplSave', `<span class="mi">☆</span>${th('menu.saveTemplate')}`) : '',
         '<div class="menu-sep" role="separator"></div>',
         item('del', `<span class="mi">✕</span>${th('editor.delete')}`, {cls: 'danger'}),
     ].join('');

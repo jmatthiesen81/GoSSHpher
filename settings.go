@@ -102,15 +102,21 @@ func saveSettings(path string, s Settings) error {
 	if err != nil {
 		return err
 	}
+	return writeFileAtomic(path, append(data, '\n'))
+}
+
+// writeFileAtomic writes a file in the user's settings directory through a
+// temporary file and a rename, with mode 0600.
+func writeFileAtomic(path string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".settings-*")
+	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+"-*")
 	if err != nil {
 		return err
 	}
 	defer os.Remove(tmp.Name())
-	if _, err := tmp.Write(append(data, '\n')); err != nil {
+	if _, err := tmp.Write(data); err != nil {
 		tmp.Close()
 		return err
 	}

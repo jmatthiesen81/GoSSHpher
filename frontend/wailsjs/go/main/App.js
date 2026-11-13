@@ -14,6 +14,10 @@ export function GetState() {
   return window['go']['main']['App']['GetState']();
 }
 
+export function GetTemplates() {
+  return window['go']['main']['App']['GetTemplates']();
+}
+
 export function IncludeFiles(arg1) {
   return window['go']['main']['App']['IncludeFiles'](arg1);
 }
@@ -76,6 +80,10 @@ export function SaveForce() {
 
 export function SaveSettings(arg1) {
   return window['go']['main']['App']['SaveSettings'](arg1);
+}
+
+export function SaveTemplates(arg1) {
+  return window['go']['main']['App']['SaveTemplates'](arg1);
 }
 
 export function SaveUISettings(arg1) {

@@ -513,3 +513,30 @@ button.icon { padding: 4px 9px; font-size: 15px; line-height: 1; }
 .exec-row select { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; }
 .exec-result { color: var(--muted); }
 #modal-text { white-space: pre-wrap; word-break: break-word; }
+
+/* ---- templates ---- */
+.modal.stacked { z-index: 11; }
+#modal { z-index: 12; }
+.modal-box.xwide { width: min(860px, 94vw); }
+.tm-layout { display: flex; gap: 14px; min-height: 340px; }
+.tm-side { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
+.tm-items { list-style: none; margin: 0; padding: 4px; flex: 1; overflow-y: auto; max-height: 52vh; border: 1px solid var(--border); border-radius: 6px; }
+.tm-items li { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 4px; cursor: pointer; }
+.tm-items li:hover { background: var(--panel-2); }
+.tm-items li.active { background: var(--accent-soft); }
+.tm-items li.none { color: var(--muted); cursor: default; font-size: 12px; }
+.tm-items .tm-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tm-items .tag.group { background: var(--accent-soft); color: var(--accent); }
+.tm-main { flex: 1; min-width: 0; }
+.tm-main .empty { padding: 40px 10px; text-align: center; color: var(--muted); }
+#tm-edit > .field-label:first-child { margin-top: 0; }
+.tm-text { width: 100%; font-family: var(--mono); font-size: 12px; resize: vertical; }
+.tm-item-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+#tm-path { font-family: var(--mono); font-size: 11px; word-break: break-all; }
+.ta-template-row { display: flex; gap: 8px; align-items: center; }
+.ta-template-row select { flex: 1; }
+.ta-preview { margin: 0; padding: 8px 10px; max-height: 220px; overflow: auto; background: var(--panel-2); border-radius: 6px;
+    font: 12px/1.45 var(--mono); white-space: pre; -webkit-user-select: text; user-select: text; }
+.gd-template-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+.gd-template-row label { color: var(--muted); white-space: nowrap; }
+.gd-template-row select { flex: 1; }

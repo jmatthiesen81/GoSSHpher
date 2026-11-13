@@ -51,6 +51,37 @@ On confirmation the selected hosts are moved together, in their current file ord
 | ⊘ on a group header                             | Dissolves the group (hosts stay)                                                          |
 | ▾/▸ on a group header                           | Collapse/expand                                                                           |
 
+## Templates
+
+Templates prefill hosts. A **host template** is a list of options, a **group template** a group name plus several Host blocks. Templates belong to the user, not to a file: they are stored in `templates.json` next to the settings file and are available for every config (see [Architecture → Template file](architecture.md#template-file)).
+
+**Create:**
+
+- *Template* field in the editor → *Save as template…*, or ⋮ in the host list → *Save as template…*: takes the options of the host (not its comments).
+- ☆ on a group header: takes all Host blocks of the group as a group template.
+- ⚙ → *Manage templates…* → *+ Host template* / *+ Group template*.
+
+**Edit:** the template manager (⚙ → *Manage templates…*, or *Manage…* in the apply dialog) lists all templates; name, group name and the content can be edited, duplicated and deleted. The content is written like an ssh config: one `Keyword value` per line, group templates with `Host <patterns>` lines followed by their options. Errors (e.g. an option before the first `Host` line) and unknown keywords are shown below; changes are only stored with *Save*.
+
+**Placeholders** in values (group templates also in the group name and in the patterns):
+
+| Placeholder                | Value                                                     |
+| -------------------------- | --------------------------------------------------------- |
+| `{alias}`                  | First literal alias of the host, e.g. `web1.acme.example` |
+| `{short}`                  | Alias up to the first dot, e.g. `web1`                    |
+| `{domain}`                 | Alias after the first dot, e.g. `acme.example`            |
+| `{group}`                  | Group of the host                                         |
+| `{name}`, `{name=default}` | Asked for when the template is applied, with a default    |
+
+ssh's own tokens such as `%h` and `${HOME}` are not placeholders and stay as they are; for values that should follow the host when connecting (e.g. `IdentityFile ~/.ssh/%h`) they are often the better choice, because nothing is copied.
+
+**Apply:**
+
+- **Host template:** *Template* field in the editor of a Host block, or ⋮ → *Apply template…*. The dialog asks for the aliases and the variables and shows a preview. A template without placeholders on a host without values is applied at once. If the host already has values, the dialog warns that its options will be **replaced** (the button reads *Overwrite*); aliases, group and the comment above the block stay, comment lines between the options are lost.
+- **Group template:** *+ Group* → *From template*. The variables are asked for once and fill all hosts; the preview shows the group with its hosts. The group is added at the end of the file (before a trailing `Host *`). Invalid or existing group names block, existing aliases are pointed out, and if existing hosts would get other effective values, these are listed and need *Apply anyway*.
+
+A template is copied when applied: later changes to the template do not change existing hosts. Applying can be undone with `Ctrl/⌘+Z`.
+
 ## Sorting and filtering
 
 - **Sort:** *File order* (drag and drop enabled), *Alias A–Z*, *Hostname A–Z*. Sorting only affects the display. In sorted views global blocks come first, then groups alphabetically, then *No group*; dropping a host onto another host puts it into that host's group.
@@ -104,6 +135,7 @@ The *Hints* tab lists all findings, sorted by severity; clicking one selects the
 | *Backups kept per file*              | Number of backups kept per file; `0` keeps all                                            |
 | *Terminal*                           | Program for *Connect in terminal*, e.g. `kitty` or `gnome-terminal --`; empty = automatic |
 | *Check for updates at start*         | Asks GitHub for a newer release at start (default: on)                                    |
+| *Manage templates…*                  | Opens the template manager (see [Templates](#templates))                                  |
 
 The dialog also shows where the settings file is stored. Details: [Architecture → Settings file](architecture.md#settings-file).
 

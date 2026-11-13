@@ -4,6 +4,7 @@ import {t} from './i18n';
 import {addBlock, blockAction, select} from './editor';
 import {applyText, closeSaveMenu, confirmDiscard, doSave, setupSaveMenu, setView} from './files';
 import {openGroupDialog, setupGroupDialog} from './groupDialog';
+import {loadTemplates, setupTemplateDialogs} from './templateDialogs';
 import {newGroupFor} from './groups';
 import {inspectorTab, renderEffective, scheduleResolve} from './inspector';
 import {loadLanguage, setupSettings} from './settings';
@@ -28,6 +29,7 @@ async function init() {
     S.widths = {...DEFAULT_WIDTHS, ...store.get('widths', {})};
     setupSplitters();
     setupGroupDialog();
+    setupTemplateDialogs();
     $('sort').addEventListener('change', (ev) => {
         S.sort = ev.target.value;
         store.set('sort', S.sort);
@@ -39,6 +41,7 @@ async function init() {
         if (marked.length) openGroupDialog({members: marked});
         else newGroupFor(selectedBlock());
     });
+    await loadTemplates();
     S.keywords = await Go.Keywords();
     S.keywords.forEach((k) => S.kwIndex.set(k.name.toLowerCase(), k));
     setupDatalists(S.keywords);

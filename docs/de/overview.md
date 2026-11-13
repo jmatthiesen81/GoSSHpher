@@ -34,6 +34,7 @@ GoSSHpher macht diese Regeln sichtbar: Die App wertet die Datei aus wie ssh, zei
 - **Effektive Konfiguration** pro Host, ähnlich wie `ssh -G`, mit dem Quell-Block jedes Werts und den unterlegenen Werten. `Match` (`host`, `originalhost`, `user`, `localuser`, `all`, `final`, `tagged`) und `Include` werden ausgewertet.
 - **Prüfungen:** überdeckte Optionen, doppelte Optionen im Block, unbekannte Keywords, Muster mit Großbuchstaben, fehlende Schlüsseldateien, `RemoteCommand … $SHELL` ohne `RequestTTY`, doppelte Gruppennamen.
 - **Gruppen** (eine Ebene), gespeichert als Kommentar-Marker `# [Name] start` / `# [Name] end`. Angelegt und bearbeitet in einem Dialog mit Autovervollständigung; bevor Hosts zusammengeschoben werden, zeigt der Dialog, welche effektiven Werte sich ändern würden.
+- **Templates** für Hosts und ganze Gruppen, mit Platzhaltern wie `{short}` oder `{ip}`, die beim Anwenden gefüllt oder abgefragt werden; pro Benutzer in `templates.json` gespeichert, nicht in der Config.
 - **Sortierung** der Host-Liste nach Datei-Reihenfolge, Alias oder Hostname (nur Anzeige).
 - **Veränderbare Breiten** der Bereiche und der Options-Spalte.
 - **Textansicht** zum direkten Bearbeiten der Datei.

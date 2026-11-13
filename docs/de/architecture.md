@@ -77,6 +77,7 @@ sequenceDiagram
 | `NewID()`                                                                 | Zufällige Block-ID                                                                                       |
 | `Save()` / `SaveForce()` / `SaveAs()`                                     | Datei schreiben (siehe unten)                                                                            |
 | `Open()` / `Reload()`                                                     | Andere Datei laden / Änderungen verwerfen                                                                |
+| `GetTemplates()` / `SaveTemplates(list)`                                  | Templates von der Platte lesen / prüfen und alle Templates ersetzen                                      |
 | `GetSettings()` / `SaveSettings(language, backup)` / `SaveUISettings(ui)` | Einstellungen lesen, Sprache und Backup-Optionen speichern, Ansichtseinstellungen speichern              |
 
 ## Regeln für Lesen und Schreiben
@@ -167,5 +168,25 @@ Die Einstellungen liegen als JSON im Konfigurationsverzeichnis des Benutzers (`o
 
 - Die Datei entsteht bei der ersten Änderung, mit Rechten `0600` in einem Verzeichnis mit `0700`, und wird atomar geschrieben. Fehlende Schlüssel fallen auf die Standardwerte zurück.
 - Existiert die Datei, lässt sich aber nicht lesen, gelten die Standardwerte, der Fehler erscheint im Einstellungsdialog, und Ansichtseinstellungen werden nicht zurückgeschrieben, damit die Datei nie unbemerkt überschrieben wird. Speichern im Einstellungsdialog ersetzt sie.
+
+## Template-Datei
+
+Templates liegen in `templates.json` im selben Verzeichnis wie `settings.json` ([templates.go](../../templates.go)). Sie stehen bewusst nicht in der ssh-Config: Sie gehören zum Benutzer, gelten für jede Datei und dürfen nicht in geteilten Configs landen (Dotfiles-Repos, Team-Includes).
+
+```json
+{
+  "version": 1,
+  "templates": [
+    { "name": "Server", "kind": "host",
+      "options": [ { "key": "Hostname", "value": "{ip}" }, { "key": "User", "value": "{user=admin}" } ] },
+    { "name": "Kunde", "kind": "group", "group": "Kunde {customer}",
+      "hosts": [ { "patterns": "bastion.{customer}.example", "options": [ { "key": "Hostname", "value": "{bastion_ip}" } ] } ] }
+  ]
+}
+```
+
+- `kind` ist `host` (nutzt `options`) oder `group` (nutzt `group` und `hosts`). Namen sind pro Art eindeutig (ohne Unterscheidung der Groß-/Kleinschreibung); leere Options-Keys und Hosts ohne Muster werden entfernt.
+- Platzhalter bleiben wie geschrieben und werden im Frontend ersetzt ([templates.js](../../frontend/src/templates.js)); ein `{` direkt nach `$` ist die `${ENV}`-Syntax von ssh und kein Platzhalter.
+- Die Datei wird bei jedem `GetTemplates()` neu gelesen, so werden Änderungen von Hand und aus anderen Fenstern übernommen. Sie wird atomar mit Modus `0600` geschrieben. Existiert sie, lässt sich aber nicht lesen, zeigt die Template-Verwaltung den Fehler und die Datei wird nie überschrieben.
 
 [Index](index.md) · [English](../en/architecture.md)

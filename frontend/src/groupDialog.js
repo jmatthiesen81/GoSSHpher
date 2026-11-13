@@ -6,6 +6,7 @@ import {afterStructureChange, groupKey, groupMembers, groupNameError, ungroup} f
 import {$, blockIndex, collator, optionValue, S, splitPatterns, store} from './state';
 import {flush, showError} from './sync';
 import {toast} from './ui';
+import {groupTemplates, openApplyDialog} from './templateDialogs';
 
 // ---- group dialog (name + hosts as tokens with autocompletion) ----
 
@@ -31,6 +32,10 @@ export function openGroupDialog({name = '', members = []} = {}) {
     $('gd-name').value = name;
     $('gd-input').value = '';
     $('gd-changes').hidden = true;
+    const tpls = name ? [] : groupTemplates();
+    $('gd-template-row').hidden = !tpls.length;
+    $('gd-template').innerHTML = `<option value="">${th('gd.fromTemplate.none')}</option>` +
+        tpls.map((x) => `<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');
     renderTokens();
     closeSuggest();
     gdValidate();
@@ -276,6 +281,12 @@ export function setupGroupDialog() {
             ev.preventDefault();
             input.focus();
         }
+    });
+    $('gd-template').addEventListener('change', (ev) => {
+        const name = ev.target.value;
+        if (!name) return;
+        closeGroupDialog();
+        openApplyDialog({mode: 'group', name});
     });
     $('gd-ok').addEventListener('click', submitGroupDialog);
     $('gd-cancel').addEventListener('click', closeGroupDialog);

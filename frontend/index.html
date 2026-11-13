@@ -89,6 +89,10 @@
 <div id="gdialog" class="modal" hidden>
     <div class="modal-box wide" role="dialog" aria-labelledby="gd-title">
         <h2 id="gd-title"></h2>
+        <div id="gd-template-row" class="gd-template-row" hidden>
+            <label for="gd-template" data-i18n="gd.fromTemplate">From template</label>
+            <select id="gd-template"></select>
+        </div>
         <label class="field-label" for="gd-name" data-i18n="gd.name">Name</label>
         <input id="gd-name" autocomplete="off" spellcheck="false" data-i18n-placeholder="gd.name.placeholder">
         <div id="gd-name-error" class="issue error" hidden></div>
@@ -121,12 +125,76 @@
         <div class="hint" data-i18n="settings.terminal.hint"></div>
         <label class="check-row"><input type="checkbox" id="set-update"> <span data-i18n="settings.updateCheck">Check for updates at start</span></label>
         <div class="hint" data-i18n="settings.updateCheck.hint"></div>
+        <label class="field-label" data-i18n="settings.templates">Templates</label>
+        <button id="set-templates" type="button" data-i18n="settings.templates.manage">Manage templates…</button>
+        <div class="hint" data-i18n="settings.templates.hint"></div>
         <label class="field-label" data-i18n="settings.path">Stored in</label>
         <code id="set-path" class="path-box"></code>
         <div id="set-error" class="issue error" hidden></div>
         <div class="modal-buttons">
             <button id="set-ok" class="primary" data-i18n="common.save">Save</button>
             <button id="set-cancel" data-i18n="common.cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+<div id="tmanager" class="modal stacked" hidden>
+    <div class="modal-box xwide" role="dialog" aria-labelledby="tm-title">
+        <h2 id="tm-title" data-i18n="tm.title">Templates</h2>
+        <div class="tm-layout">
+            <div class="tm-side">
+                <ul id="tm-items" class="tm-items" role="listbox" data-i18n-title="tm.list"></ul>
+                <button id="tm-new-host" data-i18n="tm.newHost">+ Host template</button>
+                <button id="tm-new-group" data-i18n="tm.newGroup">+ Group template</button>
+            </div>
+            <div class="tm-main">
+                <div id="tm-noselection" class="empty" data-i18n="tm.noSelection"></div>
+                <div id="tm-edit">
+                    <label class="field-label" for="tm-name" data-i18n="tm.name">Name</label>
+                    <input id="tm-name" autocomplete="off" spellcheck="false">
+                    <div id="tm-group-row">
+                        <label class="field-label" for="tm-group" data-i18n="tm.group">Group name</label>
+                        <input id="tm-group" autocomplete="off" spellcheck="false" data-i18n-placeholder="tm.group.placeholder">
+                    </div>
+                    <label class="field-label" for="tm-text" id="tm-text-label"></label>
+                    <textarea id="tm-text" class="tm-text" rows="12" spellcheck="false" wrap="off"></textarea>
+                    <div id="tm-problems"></div>
+                    <div id="tm-vars" class="hint"></div>
+                    <div class="hint" data-i18n-html="tm.placeholders_html"></div>
+                    <div class="tm-item-actions">
+                        <button id="tm-dup" data-i18n="editor.duplicate">Duplicate</button>
+                        <button id="tm-del" class="danger" data-i18n="editor.delete">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hint"><span data-i18n="settings.path">Stored in</span> <code id="tm-path"></code></div>
+        <div id="tm-error" class="issue error" hidden></div>
+        <div class="modal-buttons">
+            <button id="tm-ok" class="primary" data-i18n="common.save">Save</button>
+            <button id="tm-cancel" data-i18n="common.cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+<div id="tapply" class="modal stacked" hidden>
+    <div class="modal-box wide" role="dialog" aria-labelledby="ta-title">
+        <h2 id="ta-title"></h2>
+        <label class="field-label" for="ta-template" data-i18n="ta.template">Template</label>
+        <div class="ta-template-row">
+            <select id="ta-template"></select>
+            <button id="ta-manage" class="link" data-i18n="ta.manage">Manage…</button>
+        </div>
+        <div id="ta-alias-row">
+            <label class="field-label" for="ta-alias" data-i18n="ta.alias">Aliases</label>
+            <input id="ta-alias" autocomplete="off" spellcheck="false" data-i18n-placeholder="editor.patterns.host">
+        </div>
+        <div id="ta-vars"></div>
+        <label class="field-label" data-i18n="ta.preview">Preview</label>
+        <pre id="ta-preview" class="ta-preview"></pre>
+        <div id="ta-problems"></div>
+        <div id="ta-changes" class="changes" hidden></div>
+        <div class="modal-buttons">
+            <button id="ta-ok" class="primary"></button>
+            <button id="ta-cancel" data-i18n="common.cancel">Cancel</button>
         </div>
     </div>
 </div>
