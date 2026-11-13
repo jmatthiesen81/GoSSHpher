@@ -65,12 +65,25 @@ export function sidebarRows() {
 
 // ---- marking (Ctrl/⌘+click): a contiguous run of hosts for "+ Group" ----
 
-// markSequence is the host list as shown, with null for rows a marked run
-// cannot span: global blocks and collapsed groups.
+// markSequence is the host list as shown, with null where a marked run must
+// stop: global blocks, group headers and every change of the group between
+// two hosts. Marks therefore never span groups – "+ Group" would otherwise
+// pull hosts out of several groups at once.
 export function markSequence() {
-    return sidebarRows()
-        .filter((r) => r.type === 'block' || (r.type === 'group' && r.collapsed))
-        .map((r) => (r.type === 'block' && r.b.kind !== 'global' ? r.b.id : null));
+    const seq = [];
+    let prev = null; // group key of the previous host
+    for (const r of sidebarRows()) {
+        if (r.type !== 'block' || r.b.kind === 'global') {
+            seq.push(null);
+            prev = null;
+            continue;
+        }
+        const g = groupKey(r.b.group);
+        if (prev !== null && prev !== g) seq.push(null);
+        seq.push(r.b.id);
+        prev = g;
+    }
+    return seq;
 }
 
 // markedIds returns the marked hosts that still exist, in list order.
