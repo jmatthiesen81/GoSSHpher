@@ -3,11 +3,11 @@ import * as Go from '../wailsjs/go/main/App';
 import {t} from './i18n';
 import {addBlock, blockAction, select} from './editor';
 import {applyText, closeSaveMenu, confirmDiscard, doSave, setupSaveMenu, setView} from './files';
-import {setupGroupDialog} from './groupDialog';
+import {openGroupDialog, setupGroupDialog} from './groupDialog';
 import {newGroupFor} from './groups';
 import {inspectorTab, renderEffective, scheduleResolve} from './inspector';
 import {loadLanguage, setupSettings} from './settings';
-import {renderSidebar} from './sidebar';
+import {clearMarks, markedIds, renderSidebar} from './sidebar';
 import {setupSplitters} from './splitters';
 import {$, DEFAULT_WIDTHS, S, selectedBlock, store} from './state';
 import {applyState, matchesFilter, renderAll, showError} from './sync';
@@ -34,7 +34,10 @@ async function init() {
         renderSidebar();
     });
     $('btn-add-group').addEventListener('click', () => {
-        newGroupFor(selectedBlock());
+        // marked hosts (Ctrl/⌘+click) take precedence over the selected one
+        const marked = markedIds();
+        if (marked.length) openGroupDialog({members: marked});
+        else newGroupFor(selectedBlock());
     });
     S.keywords = await Go.Keywords();
     S.keywords.forEach((k) => S.kwIndex.set(k.name.toLowerCase(), k));
@@ -125,6 +128,8 @@ async function init() {
             if (!b || b.kind === 'global') return;
             ev.preventDefault();
             blockAction(ev.key === 'ArrowUp' ? 'up' : 'down');
+        } else if (ev.key === 'Escape' && S.marked.length && !(ev.target instanceof Element && ev.target.closest('.modal, input, textarea, select'))) {
+            clearMarks();
         }
     });
     $('filter').addEventListener('keydown', (ev) => {

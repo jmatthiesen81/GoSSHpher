@@ -35,6 +35,8 @@ Gruppen ordnen die Host-Liste und werden als Kommentar-Marker gespeichert (siehe
 - ein Feld **Name**, das auf Eindeutigkeit (ohne Unterscheidung der Groß-/Kleinschreibung) und erlaubte Zeichen geprüft wird;
 - ein Feld **Hosts** mit Chips: Tippen sucht in Aliasen, Hostname, User und Gruppe; `↓` zeigt alle Hosts; `Enter`/`Tab` fügt hinzu; `Backspace` entfernt den letzten Chip; Einfügen mehrerer Namen (`a b, c`) übernimmt alle bekannten und meldet unbekannte. Positionsnummern (`#24`) und die Schlüsseldatei unterscheiden Blöcke mit gleichen Aliasen.
 
+**Mehrere Hosts auf einmal:** `Strg/⌘+Klick` in der Host-Liste markiert Hosts – ausgehend vom ausgewählten Host und nur direkt benachbarte (globale Blöcke und eingeklappte Gruppen unterbrechen die Reihe); `Strg/⌘+Klick` auf das erste oder letzte markierte Element nimmt es wieder heraus. `Umschalt+Klick` markiert alle Hosts vom ausgewählten bis zum angeklickten Host. *+ Gruppe* übernimmt die markierten Hosts dann in das Feld **Hosts**. Ein normaler Klick oder `Esc` hebt die Markierung auf.
+
 Beim Bestätigen werden die gewählten Hosts in ihrer bisherigen Datei-Reihenfolge an die Stelle des ersten zusammengeschoben. Hosts, die aus einer bestehenden Gruppe entfernt werden, landen direkt dahinter. **Vor dem Verschieben berechnet der Dialog die effektive Konfiguration jedes festen Alias vorher und nachher** und listet geänderte Werte auf; übernommen wird erst nach *Trotzdem übernehmen*. Werden alle Hosts entfernt, wird die Gruppe aufgelöst.
 
 **Weitere Wege, die Zugehörigkeit zu ändern:**
@@ -115,15 +117,17 @@ Jede Änderung am Dokument lässt sich rückgängig machen: `Strg/⌘+Z` oder �
 
 ## Tastenkürzel
 
-| Taste                           | Aktion                                                                     |
-| ------------------------------- | -------------------------------------------------------------------------- |
-| `Strg/⌘+S`                      | Speichern                                                                  |
-| `Strg/⌘+F`                      | Host-Filter fokussieren                                                    |
-| `Strg/⌘+Z`                      | Rückgängig                                                                 |
-| `Strg/⌘+Umschalt+Z`, `Strg/⌘+Y` | Wiederholen                                                                |
-| `Alt+↑` / `Alt+↓`               | Ausgewählten Block verschieben (am Gruppenrand: Gruppe betreten/verlassen) |
-| `Enter` im letzten Wert         | Neue Optionszeile                                                          |
-| `Esc`                           | Dialog / Vorschlagsliste schließen                                         |
+| Taste                              | Aktion                                                                     |
+| ---------------------------------- | -------------------------------------------------------------------------- |
+| `Strg/⌘+S`                         | Speichern                                                                  |
+| `Strg/⌘+F`                         | Host-Filter fokussieren                                                    |
+| `Strg/⌘+Z`                         | Rückgängig                                                                 |
+| `Strg/⌘+Umschalt+Z`, `Strg/⌘+Y`    | Wiederholen                                                                |
+| `Alt+↑` / `Alt+↓`                  | Ausgewählten Block verschieben (am Gruppenrand: Gruppe betreten/verlassen) |
+| `Enter` im letzten Wert            | Neue Optionszeile                                                          |
+| `Strg/⌘+Klick` in der Host-Liste   | Benachbarten Host markieren / Markierung verkleinern (für *+ Gruppe*)      |
+| `Umschalt+Klick` in der Host-Liste | Alle Hosts vom ausgewählten bis zum angeklickten markieren                 |
+| `Esc`                              | Dialog / Vorschlagsliste schließen, Markierung aufheben                    |
 
 ## Beispieldatei
 

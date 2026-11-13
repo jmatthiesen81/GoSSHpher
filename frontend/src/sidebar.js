@@ -2,9 +2,10 @@
 
 import {esc, t, th} from './i18n';
 import {blockAction, connectHost, moveBlockTo, select} from './editor';
-import {groupKey, groupMembers, groupNames, moveGroupTo, renameGroup, setBlockGroup, toggleGroup, ungroup} from './groups';
+import {groupKey, groupMembers, groupNames, moveGroupTo, renameGroup, setBlockGroup, markRange, toggleGroup, toggleMark, ungroup} from './groups';
 import {$, blockIndex, collator, hasPreamble, isGlobalHost, optionValue, preambleHasOptions, S, splitPatterns} from './state';
 import {issuesFor, matchesFilter, worstSeverity} from './sync';
+import {toast} from './ui';
 
 // ---- sidebar ----
 
@@ -59,6 +60,50 @@ export function sidebarRows() {
     if (groupNames().length && rest.length) rows.push({type: 'nogroup', count: rest.length});
     rest.forEach((b) => rows.push({type: 'block', b}));
     return rows;
+}
+
+// ---- marking (Ctrl/⌘+click): a contiguous run of hosts for "+ Group" ----
+
+// markSequence is the host list as shown, with null for rows a marked run
+// cannot span: global blocks and collapsed groups.
+export function markSequence() {
+    return sidebarRows()
+        .filter((r) => r.type === 'block' || (r.type === 'group' && r.collapsed))
+        .map((r) => (r.type === 'block' && r.b.kind !== 'global' ? r.b.id : null));
+}
+
+// markedIds returns the marked hosts that still exist, in list order.
+export function markedIds() {
+    const seq = markSequence();
+    return S.marked.filter((id) => seq.includes(id)).sort((a, b) => seq.indexOf(a) - seq.indexOf(b));
+}
+
+export function clearMarks() {
+    if (!S.marked.length) return;
+    S.marked = [];
+    renderSidebar();
+}
+
+// markClick handles Ctrl/⌘+click (add or remove one neighbour) and
+// Shift+click (mark everything from the selected host to the clicked one).
+function markClick(b, range) {
+    if (b.kind === 'global') return;
+    const seq = markSequence();
+    let next;
+    if (range) {
+        // anchor: the selected host, else the first host of the current marks
+        const anchor = seq.includes(S.selected) ? S.selected : markedIds()[0];
+        next = markRange(seq, anchor, b.id);
+        if (!next) return toast(t('sidebar.mark.rangeInterrupted'), 'error');
+    } else {
+        // the selected host starts the run, so Ctrl+click extends from it
+        let marked = S.marked;
+        if (!marked.length && S.selected !== b.id && seq.includes(S.selected)) marked = [S.selected];
+        next = toggleMark(seq, marked, b.id);
+        if (!next) return toast(t('sidebar.mark.adjacentOnly'), 'error');
+    }
+    S.marked = next;
+    renderSidebar();
 }
 
 export let dragData = null; // {kind: 'block'|'group', id|name}
@@ -145,6 +190,7 @@ export function renderSidebar() {
         const idx = blockIndex(b.id);
         li.className = 'block-item' + (row.inGroup ? ' in-group' : '');
         if (b.id === S.selected) li.classList.add('selected');
+        if (S.marked.includes(b.id)) li.classList.add('marked');
         if ((b.kind === 'global' && preambleHasOptions(b)) || isGlobalHost(b)) li.classList.add('global');
         li.dataset.id = b.id;
         li.draggable = b.kind !== 'global';
@@ -183,7 +229,16 @@ export function renderSidebar() {
             if (blockMenuFor === b.id) closeBlockMenu();
             else openBlockMenu(b, ev.currentTarget);
         });
-        li.addEventListener('click', () => select(b.id));
+        // Shift+mousedown would otherwise select the text of the rows
+        li.addEventListener('mousedown', (ev) => {
+            if (ev.shiftKey) ev.preventDefault();
+        });
+        li.addEventListener('click', (ev) => {
+            if (ev.shiftKey) return markClick(b, true);
+            if (ev.ctrlKey || ev.metaKey) return markClick(b, false);
+            S.marked = [];
+            select(b.id);
+        });
         if (li.draggable) {
             li.addEventListener('dragstart', (ev) => {
                 dragData = {kind: 'block', id: b.id};

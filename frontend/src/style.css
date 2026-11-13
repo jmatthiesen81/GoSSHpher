@@ -150,6 +150,7 @@ input[type=search] { font-family: var(--sans); }
 
 .block-item:hover { background: var(--panel-2); }
 .block-item.selected { background: var(--accent-soft); border-left-color: var(--accent); }
+.block-item.marked { background: var(--accent-soft); }
 .block-item.global { border-left-color: var(--global); }
 .block-item.global.selected { background: var(--global-soft); }
 .block-item.dragging { opacity: .4; }

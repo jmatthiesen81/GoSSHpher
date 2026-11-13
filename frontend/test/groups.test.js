@@ -1,6 +1,6 @@
 import './mocks';
 import {beforeEach, describe, expect, it} from 'vitest';
-import {groupNameError, groupRun, inferGroup, moveGroupTo, setBlockGroup} from '../src/groups';
+import {groupNameError, groupRun, inferGroup, moveGroupTo, markRange, setBlockGroup, toggleMark} from '../src/groups';
 import {planGroup} from '../src/groupDialog';
 import {S} from '../src/state';
 import {host, load, order} from './helpers';
@@ -100,5 +100,50 @@ describe('planGroup', () => {
         const blocks = planGroup('N', '', ['m', 'x']);
         expect(blocks.slice(1).map((b) => (b.group ? `${b.id}:${b.group}` : b.id)))
             .toEqual(['h1:H', 'h2:H', 'm:N', 'x:N']);
+    });
+});
+
+describe('toggleMark', () => {
+    const seq = ['a', 'b', 'c', null, 'd', 'e'];
+    it('starts a run and extends it by neighbours only', () => {
+        expect(toggleMark(seq, [], 'b')).toEqual(['b']);
+        expect(toggleMark(seq, ['b'], 'c')).toEqual(['b', 'c']);
+        expect(toggleMark(seq, ['b', 'c'], 'a')).toEqual(['a', 'b', 'c']);
+        expect(toggleMark(seq, ['b'], 'e')).toBeNull();
+    });
+    it('does not span interrupting rows', () => {
+        expect(toggleMark(seq, ['b', 'c'], 'd')).toBeNull();
+        expect(toggleMark(seq, ['b', 'c'], null)).toBeNull();
+        expect(toggleMark(seq, ['d'], 'c')).toBeNull();
+    });
+    it('removes only the ends of the run', () => {
+        expect(toggleMark(seq, ['a', 'b', 'c'], 'a')).toEqual(['b', 'c']);
+        expect(toggleMark(seq, ['a', 'b', 'c'], 'c')).toEqual(['a', 'b']);
+        expect(toggleMark(seq, ['a', 'b', 'c'], 'b')).toBeNull();
+        expect(toggleMark(seq, ['b'], 'b')).toEqual([]);
+    });
+    it('starts anew when the old marks are stale', () => {
+        expect(toggleMark(seq, ['gone'], 'e')).toEqual(['e']);
+        expect(toggleMark(seq, ['a', 'c'], 'e')).toEqual(['e']);
+    });
+    it('ignores ids that are not in the list', () => {
+        expect(toggleMark(seq, ['a'], 'x')).toBeNull();
+    });
+});
+
+describe('markRange', () => {
+    const seq = ['a', 'b', 'c', null, 'd', 'e'];
+    it('marks everything between anchor and target in both directions', () => {
+        expect(markRange(seq, 'a', 'c')).toEqual(['a', 'b', 'c']);
+        expect(markRange(seq, 'c', 'a')).toEqual(['a', 'b', 'c']);
+        expect(markRange(seq, 'b', 'b')).toEqual(['b']);
+    });
+    it('refuses ranges across interrupting rows', () => {
+        expect(markRange(seq, 'b', 'e')).toBeNull();
+    });
+    it('falls back to the target alone without a usable anchor', () => {
+        expect(markRange(seq, null, 'd')).toEqual(['d']);
+        expect(markRange(seq, 'gone', 'd')).toEqual(['d']);
+        expect(markRange(seq, 'a', 'x')).toBeNull();
     });
 });

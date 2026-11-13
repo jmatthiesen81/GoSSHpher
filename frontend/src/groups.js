@@ -130,7 +130,39 @@ export function newGroupFor(b) {
     openGroupDialog({members: b && b.kind !== 'global' ? [b.id] : []});
 }
 
+// toggleMark adds a host to or removes it from the marked run. seq is the
+// host list as shown: block ids, with null for rows that interrupt a run
+// (global blocks, collapsed groups). Only a neighbour of the run can be
+// added and only one of its ends removed, so the marks always stay one
+// contiguous run. Returns the new run, or null if id is not adjacent.
+export function toggleMark(seq, marked, id) {
+    const p = id == null ? -1 : seq.indexOf(id);
+    if (p < 0) return null;
+    const idx = marked.map((m) => seq.indexOf(m)).sort((a, b) => a - b);
+    const lo = idx[0], hi = idx[idx.length - 1];
+    // no or stale marks (hidden by the filter, list changed): start anew
+    if (!idx.length || lo < 0 || hi - lo + 1 !== idx.length) return [id];
+    if (p === lo - 1) return seq.slice(p, hi + 1);
+    if (p === hi + 1) return seq.slice(lo, p + 1);
+    if (p === lo) return seq.slice(lo + 1, hi + 1);
+    if (p === hi) return seq.slice(lo, hi);
+    return null;
+}
+
+// markRange returns the run from anchor to id (both included) in the host
+// list as shown (see toggleMark), or null if a row in between interrupts it.
+// Without a usable anchor the run is id alone.
+export function markRange(seq, anchor, id) {
+    const p = id == null ? -1 : seq.indexOf(id);
+    if (p < 0) return null;
+    const a = anchor == null ? -1 : seq.indexOf(anchor);
+    if (a < 0) return [id];
+    const run = seq.slice(Math.min(a, p), Math.max(a, p) + 1);
+    return run.includes(null) ? null : run;
+}
+
 export function afterStructureChange(selectId) {
+    S.marked = [];
     ensureSeparators();
     if (selectId) S.selected = selectId;
     renderSidebar();

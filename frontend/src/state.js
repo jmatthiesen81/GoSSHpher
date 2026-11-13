@@ -18,6 +18,7 @@ export const S = {
     keywords: [],
     kwIndex: new Map(), // lower name -> keyword
     selected: null,    // block id
+    marked: [],        // block ids marked with Ctrl/⌘+click (a contiguous run)
     filter: '',
     view: 'editor',
     textDirty: false,

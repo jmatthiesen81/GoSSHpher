@@ -4,6 +4,7 @@ import (
 	"embed"
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -19,6 +20,10 @@ var assets embed.FS
 //go:embed build/linux/icons/hicolor/256x256/apps/gosshpher.png
 var icon []byte
 
+// maxWindowSize is the largest window size on Linux (X11 sizes are 16-bit
+// signed; leave headroom for the decorations Wails adds on Wayland).
+const maxWindowSize = 30000
+
 func main() {
 	path := DefaultConfigPath()
 	if len(os.Args) > 1 && os.Args[1] != "" && os.Args[1][0] != '-' {
@@ -26,12 +31,23 @@ func main() {
 	}
 	app := NewApp(path)
 
+	// Wails on Linux turns a MaxWidth/MaxHeight of 0 into the size of the
+	// monitor the window opens on, so with several monitors the window could
+	// never grow beyond the narrowest one. A large explicit limit lifts that.
+	// Windows and macOS treat 0 as "no limit" and need nothing.
+	maxWidth, maxHeight := 0, 0
+	if runtime.GOOS == "linux" {
+		maxWidth, maxHeight = maxWindowSize, maxWindowSize
+	}
+
 	err := wails.Run(&options.App{
 		Title:     "GoSSHpher",
 		Width:     1400,
 		Height:    900,
 		MinWidth:  900,
 		MinHeight: 600,
+		MaxWidth:  maxWidth,
+		MaxHeight: maxHeight,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

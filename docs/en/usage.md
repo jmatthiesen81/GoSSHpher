@@ -35,6 +35,8 @@ Groups organise the host list and are stored as comment markers (see [Architectu
 - a **name** field, checked for uniqueness (case-insensitive) and allowed characters;
 - a **hosts** field with chips: typing searches aliases, hostname, user and group; `↓` lists all hosts; `Enter`/`Tab` adds; `Backspace` removes the last chip; pasting several names (`a b, c`) adds all known ones and reports unknown ones. Position numbers (`#24`) and the key file distinguish blocks with identical aliases.
 
+**Several hosts at once:** `Ctrl/⌘+click` in the host list marks hosts – starting from the selected host and only directly adjacent ones (global blocks and collapsed groups interrupt the run); `Ctrl/⌘+click` on the first or last marked entry unmarks it. `Shift+click` marks all hosts from the selected one to the clicked one. *+ Group* then fills the **hosts** field with the marked hosts. A plain click or `Esc` clears the marks.
+
 On confirmation the selected hosts are moved together, in their current file order, to the position of the first one. Hosts removed from an existing group are placed directly after it. **Before moving, the dialog computes the effective configuration of every literal alias before and after** and lists changed values; the change is only applied after *Apply anyway*. Removing all hosts dissolves the group.
 
 **Other ways to change membership:**
@@ -115,15 +117,17 @@ Every change of the document can be undone: `Ctrl/⌘+Z` or ↶ undoes, `Ctrl/�
 
 ## Keyboard shortcuts
 
-| Key                          | Action                                                       |
-| ---------------------------- | ------------------------------------------------------------ |
-| `Ctrl/⌘+S`                   | Save                                                         |
-| `Ctrl/⌘+F`                   | Focus the host filter                                        |
-| `Ctrl/⌘+Z`                   | Undo                                                         |
-| `Ctrl/⌘+Shift+Z`, `Ctrl/⌘+Y` | Redo                                                         |
-| `Alt+↑` / `Alt+↓`            | Move the selected block (enters/leaves groups at their edge) |
-| `Enter` in the last value    | Add an option row                                            |
-| `Esc`                        | Close dialog / suggestion list                               |
+| Key                             | Action                                                       |
+| ------------------------------- | ------------------------------------------------------------ |
+| `Ctrl/⌘+S`                      | Save                                                         |
+| `Ctrl/⌘+F`                      | Focus the host filter                                        |
+| `Ctrl/⌘+Z`                      | Undo                                                         |
+| `Ctrl/⌘+Shift+Z`, `Ctrl/⌘+Y`    | Redo                                                         |
+| `Alt+↑` / `Alt+↓`               | Move the selected block (enters/leaves groups at their edge) |
+| `Enter` in the last value       | Add an option row                                            |
+| `Ctrl/⌘+click` in the host list | Mark an adjacent host / shrink the marks (for *+ Group*)     |
+| `Shift+click` in the host list  | Mark all hosts from the selected one to the clicked one      |
+| `Esc`                           | Close dialog / suggestion list, clear the marks              |
 
 ## Example file
 
