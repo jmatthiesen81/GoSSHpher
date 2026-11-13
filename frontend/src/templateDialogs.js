@@ -389,6 +389,85 @@ async function submitApply() {
     toast(t('ta.groupCreated', {name: p.group, count: blocks.length}));
 }
 
+// ========================================================= template menu ===
+// The ⇲ Template button in the editor opens this menu: the host templates,
+// then "Save as template…" and "Manage templates…".
+
+let menuFor = null; // id of the block the menu belongs to
+
+export function closeTemplateMenu() {
+    const menu = $('template-menu');
+    if (!menu || menu.hidden) return;
+    menu.hidden = true;
+    menuFor = null;
+    $('btn-template')?.setAttribute('aria-expanded', 'false');
+}
+
+function setupTemplateMenu() {
+    const menu = document.createElement('div');
+    menu.id = 'template-menu';
+    menu.className = 'menu floating';
+    menu.setAttribute('role', 'menu');
+    menu.hidden = true;
+    document.body.appendChild(menu);
+    menu.addEventListener('click', (ev) => {
+        const item = ev.target.closest('[data-act]');
+        if (!item || item.disabled) return;
+        const b = S.config.blocks.find((x) => x.id === menuFor);
+        closeTemplateMenu();
+        if (!b) return;
+        if (item.dataset.act === 'apply') applyTemplateTo(b, item.dataset.name);
+        else if (item.dataset.act === 'save') saveBlockAsTemplate(b);
+        else if (item.dataset.act === 'manage') openTemplateManager();
+    });
+    menu.addEventListener('keydown', (ev) => {
+        const items = [...menu.querySelectorAll('[role="menuitem"]:not(:disabled)')];
+        const i = items.indexOf(document.activeElement);
+        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+            ev.preventDefault();
+            const d = ev.key === 'ArrowDown' ? 1 : -1;
+            items[(i + d + items.length) % items.length]?.focus();
+        } else if (ev.key === 'Escape' || ev.key === 'Tab') {
+            ev.preventDefault();
+            ev.stopPropagation();
+            closeTemplateMenu();
+            $('btn-template')?.focus();
+        }
+    });
+    document.addEventListener('click', (ev) => {
+        if (!ev.target.closest('#template-menu')) closeTemplateMenu();
+    });
+    $('editor').addEventListener('scroll', closeTemplateMenu);
+    window.addEventListener('resize', closeTemplateMenu);
+    window.addEventListener('blur', closeTemplateMenu);
+    return menu;
+}
+
+export function toggleTemplateMenu(b, anchor) {
+    const menu = $('template-menu') || setupTemplateMenu();
+    if (!menu.hidden && menuFor === b.id) return closeTemplateMenu();
+    const list = hostTemplates();
+    menu.innerHTML = [
+        list.length
+            ? list.map((x) => `<button role="menuitem" data-act="apply" data-name="${esc(x.name)}"><span class="mi">⇲</span>${esc(x.name)}</button>`).join('')
+            : `<button role="menuitem" disabled><span class="mi"></span>${th('editor.template.none')}</button>`,
+        '<div class="menu-sep" role="separator"></div>',
+        `<button role="menuitem" data-act="save"><span class="mi">☆</span>${th('menu.saveTemplate')}</button>`,
+        `<button role="menuitem" data-act="manage"><span class="mi">⚙</span>${th('settings.templates.manage')}</button>`,
+    ].join('');
+    menuFor = b.id;
+    anchor.setAttribute('aria-expanded', 'true');
+    menu.hidden = false;
+    // below the button, left-aligned, flipped up near the bottom
+    const r = anchor.getBoundingClientRect();
+    const m = menu.getBoundingClientRect();
+    const left = Math.max(4, Math.min(r.left, window.innerWidth - m.width - 4));
+    const top = r.bottom + 4 + m.height > window.innerHeight ? r.top - 4 - m.height : r.bottom + 4;
+    menu.style.left = left + 'px';
+    menu.style.top = Math.max(4, top) + 'px';
+    menu.querySelector('[role="menuitem"]:not(:disabled)')?.focus();
+}
+
 // ======================================================== save as template ===
 
 export function saveBlockAsTemplate(b) {

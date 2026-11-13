@@ -10,7 +10,17 @@ import {$, blockIndex, blockTitle, isGlobalHost, isWildcard, kw, preambleHasOpti
 import {flush, issuesFor, renderAll, scheduleSync, showError, worstSeverity} from './sync';
 import {doSave} from './files';
 import {issueText, kwDesc, kwDescHtml, modal, toast} from './ui';
-import {applyTemplateTo, hostTemplates, openApplyDialog, openTemplateManager, saveBlockAsTemplate} from './templateDialogs';
+import {openApplyDialog, saveBlockAsTemplate, toggleTemplateMenu} from './templateDialogs';
+
+// Small line icons (stroke follows the text colour); emoji such as 🗑 render
+// inconsistently across platforms and fonts.
+const svg = (body) => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+const ICONS = {
+    play: svg('<polygon points="7 4 20 12 7 20 7 4"/>'),
+    copy: svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    trash: svg('<path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>'),
+};
 
 export function select(id, {pattern = null} = {}) {
     if (S.selected !== id) {
@@ -53,14 +63,18 @@ export function renderEditor() {
             <input id="ed-patterns" class="patterns" value="${esc(b.patterns)}" spellcheck="false" autocomplete="off"
                 placeholder="${th(isMatch ? 'editor.patterns.match' : 'editor.patterns.host')}">
             <div class="block-actions">
-                <button data-act="first" ${idx <= 1 ? 'disabled' : ''} title="${th('editor.first')}">⇈</button>
-                <button data-act="up" ${idx <= 1 && !b.group ? 'disabled' : ''} title="${th('editor.up')}">↑</button>
-                <button data-act="down" ${idx >= last && !b.group ? 'disabled' : ''} title="${th('editor.down')}">↓</button>
-                <button data-act="last" ${idx >= last ? 'disabled' : ''} title="${th('editor.last')}">⇊</button>
-                ${isMatch ? '' : `<button data-act="connect" ${connectHost(b) ? '' : 'disabled'}
-                    title="${th(connectHost(b) ? 'menu.connect' : 'menu.connect.disabled')}">${th('menu.connect')}</button>`}
-                <button data-act="dup" title="${th('editor.duplicate')}">${th('editor.duplicate')}</button>
-                <button data-act="del" class="danger" title="${th('editor.delete.title')}">${th('editor.delete')}</button>
+                ${isMatch ? '' : `<button id="btn-template" class="template-btn" aria-haspopup="menu" aria-expanded="false"
+                    title="${th('editor.template.title')}">${th('editor.template')} ▾</button>
+                <button data-act="connect" class="icon-btn" ${connectHost(b) ? '' : 'disabled'}
+                    title="${th(connectHost(b) ? 'menu.connect' : 'menu.connect.disabled')}" aria-label="${th('menu.connect')}">${ICONS.play}</button>`}
+                <button data-act="dup" class="icon-btn" title="${th('editor.duplicate')}" aria-label="${th('editor.duplicate')}">${ICONS.copy}</button>
+                <span class="action-sep" aria-hidden="true"></span>
+                <button data-act="first" ${idx <= 1 ? 'disabled' : ''} title="${th('editor.first')}" aria-label="${th('editor.first')}">⇈</button>
+                <button data-act="up" ${idx <= 1 && !b.group ? 'disabled' : ''} title="${th('editor.up')}" aria-label="${th('editor.up')}">↑</button>
+                <button data-act="down" ${idx >= last && !b.group ? 'disabled' : ''} title="${th('editor.down')}" aria-label="${th('editor.down')}">↓</button>
+                <button data-act="last" ${idx >= last ? 'disabled' : ''} title="${th('editor.last')}" aria-label="${th('editor.last')}">⇊</button>
+                <span class="action-sep" aria-hidden="true"></span>
+                <button data-act="del" class="icon-btn danger" title="${th('editor.delete.title')}" aria-label="${th('editor.delete')}">${ICONS.trash}</button>
             </div>
         </div>
         <div class="hint">${th(isMatch ? 'editor.hint.match_html' : 'editor.hint.host_html')}</div>
@@ -74,16 +88,6 @@ export function renderEditor() {
             </select>
             ${b.group ? `<button id="btn-rename-group" class="link">${th('editor.group.edit')}</button>` : ''}
         </div>
-        ${isMatch ? '' : `<div class="group-row">
-            <label for="ed-template">${th('editor.template')}</label>
-            <select id="ed-template">
-                <option value="">${th(hostTemplates().length ? 'editor.template.choose' : 'editor.template.none')}</option>
-                ${hostTemplates().map((x) => `<option value="tpl:${esc(x.name)}">${esc(x.name)}</option>`).join('')}
-                <option disabled>──────────</option>
-                <option value="__save">${th('menu.saveTemplate')}</option>
-                <option value="__manage">${th('settings.templates.manage')}</option>
-            </select>
-        </div>`}
         <div class="issue-slot" data-slot="-1"></div>`;
         if (isGlobalHost(b)) {
             const atEnd = idx === last;
@@ -133,14 +137,11 @@ export function renderEditor() {
         });
         $('btn-rename-group')?.addEventListener('click', () => renameGroup(b.group));
     }
-    $('ed-template')?.addEventListener('change', (ev) => {
-        const v = ev.target.value;
-        ev.target.value = '';
-        if (v === '__save') saveBlockAsTemplate(b);
-        else if (v === '__manage') openTemplateManager();
-        else if (v.startsWith('tpl:')) applyTemplateTo(b, v.slice(4));
+    $('btn-template')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        toggleTemplateMenu(b, ev.currentTarget);
     });
-    ed.querySelectorAll('.block-actions button').forEach((btn) =>
+    ed.querySelectorAll('.block-actions button[data-act]').forEach((btn) =>
         btn.addEventListener('click', () => blockAction(btn.dataset.act)));
     $('ed-comment')?.addEventListener('input', (ev) => {
         setLeadingComment(b, ev.target.value);

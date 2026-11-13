@@ -21,8 +21,8 @@ The UI is available in English (default) and German; switch it in the [settings]
 - **Options:** keyword with autocompletion and description, value with suggestions for typical values. Cumulative keywords are marked *cumulative*. *+ Option*, *+ Comment* and quick buttons (`Hostname`, `User`, `Port`, `IdentityFile`, `ProxyJump`, `RemoteCommand`, `RequestTTY`, `LocalForward`) add lines. `Enter` in the last value adds a new row.
 - **Comment:** the comment lines above the block.
 - **Order:** drag a block in the list (file order view), use the arrow buttons (to top, up, down, to bottom) or `Alt+↑/↓`. Order matters because the first value wins.
-- **New block:** *+ Host* inserts after the selected block, but never behind a trailing `Host *` defaults block. *Duplicate* copies the block, *Delete* removes it after a confirmation. Both are also in the *⋮* menu of every entry in the host list (shown on hover).
-- **Connect in terminal:** in the editor or in the *⋮* menu of an entry. Opens a terminal window running `ssh <alias>` with the first alias without wildcards (not available for `Match` blocks and pure patterns). When the edited file is not `~/.ssh/config`, `ssh -F <file> <alias>` is run. ssh reads the file from disk, so GoSSHpher asks whether to save unsaved changes first. If ssh fails, the window stays open until `Enter` is pressed. The terminal is detected automatically (Linux: `$TERMINAL`, `x-terminal-emulator`, gnome-terminal, ptyxis, konsole, xfce4-terminal, tilix, kitty, alacritty, wezterm, foot, xterm; macOS: Terminal.app; Windows: Windows Terminal, otherwise `cmd`) and can be set in the settings, e.g. `kitty` or `gnome-terminal --`; the command is appended.
+- **New block:** *+ Host* inserts after the selected block, but never behind a trailing `Host *` defaults block. The header row of the editor holds, from left to right: *Template ▾*, ▶ *Connect in terminal*, the copy icon (*Duplicate*), the move buttons ⇈ ↑ ↓ ⇊ and, set apart at the end, the bin (*Delete*, after a confirmation); every icon names its action in the tooltip. Both are also in the *⋮* menu of every entry in the host list (shown on hover).
+- **Connect in terminal:** ▶ in the editor or in the *⋮* menu of an entry. Opens a terminal window running `ssh <alias>` with the first alias without wildcards (not available for `Match` blocks and pure patterns). When the edited file is not `~/.ssh/config`, `ssh -F <file> <alias>` is run. ssh reads the file from disk, so GoSSHpher asks whether to save unsaved changes first. If ssh fails, the window stays open until `Enter` is pressed. The terminal is detected automatically (Linux: `$TERMINAL`, `x-terminal-emulator`, gnome-terminal, ptyxis, konsole, xfce4-terminal, tilix, kitty, alacritty, wezterm, foot, xterm; macOS: Terminal.app; Windows: Windows Terminal, otherwise `cmd`) and can be set in the settings, e.g. `kitty` or `gnome-terminal --`; the command is appended.
 - **Global options:** options before the first `Host`/`Match` are shown as *global · Start of file*. If the start of the file only holds comments, it is listed as *File header* (without the *global* tag). `Host *` blocks are tagged *global*; the editor explains whether their values take precedence (not at the end) or are defaults (at the end).
 - **Text view:** edit the raw file; switching back to the editor or *Apply* parses it again.
 
@@ -57,7 +57,7 @@ Templates prefill hosts. A **host template** is a list of options, a **group tem
 
 **Create:**
 
-- *Template* field in the editor → *Save as template…*, or ⋮ in the host list → *Save as template…*: takes the options of the host (not its comments).
+- *Template ▾* in the editor's header row → *Save as template…*, or ⋮ in the host list → *Save as template…*: takes the options of the host (not its comments).
 - ☆ on a group header: takes all Host blocks of the group as a group template.
 - ⚙ → *Manage templates…* → *+ Host template* / *+ Group template*.
 
@@ -77,7 +77,7 @@ ssh's own tokens such as `%h` and `${HOME}` are not placeholders and stay as the
 
 **Apply:**
 
-- **Host template:** *Template* field in the editor of a Host block, or ⋮ → *Apply template…*. The dialog asks for the aliases and the variables and shows a preview. A template without placeholders on a host without values is applied at once. If the host already has values, the dialog warns that its options will be **replaced** (the button reads *Overwrite*); aliases, group and the comment above the block stay, comment lines between the options are lost.
+- **Host template:** *Template ▾* in the header row of a Host block, or ⋮ → *Apply template…*. The dialog asks for the aliases and the variables and shows a preview. A template without placeholders on a host without values is applied at once. If the host already has values, the dialog warns that its options will be **replaced** (the button reads *Overwrite*); aliases, group and the comment above the block stay, comment lines between the options are lost.
 - **Group template:** *+ Group* → *From template*. The variables are asked for once and fill all hosts; the preview shows the group with its hosts. The group is added at the end of the file (before a trailing `Host *`). Invalid or existing group names block, existing aliases are pointed out, and if existing hosts would get other effective values, these are listed and need *Apply anyway*.
 
 A template is copied when applied: later changes to the template do not change existing hosts. Applying can be undone with `Ctrl/⌘+Z`.

@@ -203,6 +203,10 @@ input[type=search] { font-family: var(--sans); }
 .patterns { font-size: 14px; font-weight: 600; flex: 1; }
 .block-actions { display: flex; gap: 4px; flex: none; }
 .block-actions button { padding: 4px 8px; }
+.block-actions .icon-btn { display: inline-flex; align-items: center; justify-content: center; }
+.block-actions .icon-btn svg { display: block; }
+.block-actions .template-btn { white-space: nowrap; }
+.block-actions .action-sep { width: 1px; margin: 4px 4px; background: var(--border); }
 
 .hint { color: var(--muted); font-size: 12px; margin: 6px 0; }
 

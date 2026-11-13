@@ -317,7 +317,6 @@
   "settings.updateCheck": "Check for updates at start",
   "settings.updateCheck.hint": "Asks GitHub (api.github.com) once per start whether a newer release exists. No data besides the request itself is sent.",
   "editor.template": "Template",
-  "editor.template.choose": "Apply template…",
   "editor.template.none": "No templates yet",
   "menu.applyTemplate": "Apply template…",
   "menu.saveTemplate": "Save as template…",
@@ -391,5 +390,6 @@
   "ta.warning.overwrite": "The current options of “{name}” are replaced by those of the template.",
   "ta.warning.comments": "{count} comment line(s) between the options are lost (the comment above the block stays).",
   "ta.warning.exists": "These aliases already exist: {aliases}",
-  "ta.changes.intro": "The new hosts change effective values of existing hosts – in ssh the first value found wins:"
+  "ta.changes.intro": "The new hosts change effective values of existing hosts – in ssh the first value found wins:",
+  "editor.template.title": "Apply a template, save the host as a template or manage templates"
 }

@@ -317,7 +317,6 @@
   "settings.updateCheck": "Beim Start nach Updates suchen",
   "settings.updateCheck.hint": "Fragt einmal pro Start bei GitHub (api.github.com) nach, ob es ein neueres Release gibt. Außer der Anfrage selbst werden keine Daten gesendet.",
   "editor.template": "Template",
-  "editor.template.choose": "Template anwenden…",
   "editor.template.none": "Noch keine Templates",
   "menu.applyTemplate": "Template anwenden…",
   "menu.saveTemplate": "Als Template speichern…",
@@ -391,5 +390,6 @@
   "ta.warning.overwrite": "Die aktuellen Optionen von „{name}“ werden durch die des Templates ersetzt.",
   "ta.warning.comments": "{count} Kommentarzeile(n) zwischen den Optionen gehen dabei verloren (der Kommentar über dem Block bleibt).",
   "ta.warning.exists": "Diese Aliase gibt es schon: {aliases}",
-  "ta.changes.intro": "Durch die neuen Hosts ändern sich effektive Werte bestehender Hosts – bei ssh gewinnt der erste gefundene Wert:"
+  "ta.changes.intro": "Durch die neuen Hosts ändern sich effektive Werte bestehender Hosts – bei ssh gewinnt der erste gefundene Wert:",
+  "editor.template.title": "Template anwenden, Host als Template speichern oder Templates verwalten"
 }
