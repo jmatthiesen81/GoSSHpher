@@ -122,13 +122,18 @@ cd frontend && npm test && npm run lint
 
 Release steps:
 
-1. In [CHANGELOG.md](../../CHANGELOG.md), turn `## [Unreleased]` into `## [1.2.0] - <date>`, add a new empty `## [Unreleased]` above it and update the compare links at the end.
-2. Commit, then tag and push:
+1. Collect the changes under `## [Unreleased]` in [CHANGELOG.md](../../CHANGELOG.md) while working.
+2. Run [scripts/release.sh](../../scripts/release.sh) on a clean working tree. It turns `## [Unreleased]` into `## [1.2.0] - <today>`, adds a new empty `## [Unreleased]` above it, updates the compare links at the end, commits (`chore(release): 1.2.0`) and creates an annotated tag. A section `## [1.2.0]` prepared by hand is used as it is. Pre-releases (`1.2.0-rc.1`) only get the tag. Nothing is pushed.
+3. Push the branch and the tag; the tag starts the release workflow:
 
 ```bash
-git tag 1.2.0
+scripts/release.sh 1.2.0 --dry-run   # optional: show the CHANGELOG diff and the release notes
+scripts/release.sh 1.2.0
+git push origin 1.2
 git push origin 1.2.0
 ```
+
+The script refuses invalid versions (`v1.2.0`), existing tags, uncommitted changes and an empty `[Unreleased]` section, and notes when the branch name (`1.1`) does not match the version. Before pushing, `git tag -d 1.2.0` (and `git reset --hard HEAD~1` if it committed) undoes it.
 
 - The version is the tag name itself (`1.0.0`, pre-releases like `1.0.0-rc.1` also work and are marked as pre-release on GitHub) and written into `wails.json` (`info.productVersion`) during the build only; manual runs use `0.0.0` and keep the archives as workflow artifacts.
 - The release notes are the CHANGELOG section of the version ([scripts/changelog-section.sh](../../scripts/changelog-section.sh)), followed by the notes GitHub generates (merged pull requests, *Full Changelog* link). A tag without its own section stops the workflow in the test job, before the builds; pre-releases fall back to the section of the base version (`1.2.0` for `1.2.0-rc.1`) and then to `[Unreleased]`. Check locally with `scripts/changelog-section.sh 1.2.0`.
