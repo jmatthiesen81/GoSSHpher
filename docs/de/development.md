@@ -122,14 +122,18 @@ cd frontend && npm test && npm run lint
 
 Ein Release erstellen:
 
+1. In [CHANGELOG.md](../../CHANGELOG.md) aus `## [Unreleased]` ein `## [1.2.0] - <Datum>` machen, darüber ein neues leeres `## [Unreleased]` anlegen und die Vergleichs-Links am Ende anpassen.
+2. Committen, dann taggen und pushen:
+
 ```bash
-git tag 1.0.0
-git push origin 1.0.0
+git tag 1.2.0
+git push origin 1.2.0
 ```
 
 - Die Version ist der Tag-Name selbst (`1.0.0`, auch Vorabversionen wie `1.0.0-rc.1`, die auf GitHub als Pre-Release markiert werden) und wird nur während des Builds in `wails.json` (`info.productVersion`) geschrieben; manuelle Läufe nutzen `0.0.0` und behalten die Archive als Workflow-Artefakte.
+- Die Release-Notes sind der CHANGELOG-Abschnitt der Version ([scripts/changelog-section.sh](../../scripts/changelog-section.sh)), gefolgt von den Notes, die GitHub erzeugt (gemergte Pull Requests, Link *Full Changelog*). Ein Tag ohne eigenen Abschnitt stoppt den Workflow schon im Test-Job, vor den Builds; Vorabversionen greifen auf den Abschnitt der Basisversion (`1.2.0` für `1.2.0-rc.1`) und dann auf `[Unreleased]` zurück. Lokal prüfen mit `scripts/changelog-section.sh 1.2.0`.
 - Die Version der Wails-CLI wird aus `go.mod` gelesen; gebaut wird mit `-trimpath`, damit keine lokalen Pfade in den Binaries landen.
-- Archive: `gosshpher-<version>-linux-amd64.tar.gz` (Binary, Icons, `.desktop`-Datei und `scripts/install-linux.sh` in der Struktur des Repositorys), `…-windows-amd64.zip`, `…-macos-universal.zip` (`.app`), jeweils mit `LICENSE`, `README.md` und `config.example`.
+- Archive: `gosshpher-<version>-linux-amd64.tar.gz` (Binary, Icons, `.desktop`-Datei und `scripts/install-linux.sh` in der Struktur des Repositorys), `…-windows-amd64.zip`, `…-macos-universal.zip` (`.app`), jeweils mit `LICENSE`, `README.md`, `CHANGELOG.md` und `config.example`.
 - Die Builds sind nicht signiert (siehe [Einrichtung](setup.md#code-signing)).
 
 ## Icons

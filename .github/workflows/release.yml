@@ -2,7 +2,9 @@ name: Release
 
 # Builds GoSSHpher for Linux, Windows and macOS.
 # - Tag push "1.2.3" (or "1.2.3-rc.1"): builds with that version and creates a GitHub release
-#   (marked as pre-release when the tag has a "-" suffix).
+#   (marked as pre-release when the tag has a "-" suffix). The release notes are the
+#   section of that version in CHANGELOG.md (scripts/changelog-section.sh), followed by
+#   the notes GitHub generates; a release tag without a CHANGELOG section fails early.
 # - Manual run (workflow_dispatch): builds with version 0.0.0 and only keeps
 #   the artifacts on the workflow run, no release.
 #
@@ -34,6 +36,11 @@ jobs:
           go-version-file: go.mod
       - run: go vet ./...
       - run: go test ./...
+      # fail before the long builds when the release has no CHANGELOG section
+      # (pre-releases fall back to the base version and [Unreleased])
+      - name: Check CHANGELOG section
+        if: github.ref_type == 'tag'
+        run: scripts/changelog-section.sh "$GITHUB_REF_NAME"
 
   build:
     needs: test
@@ -220,7 +227,7 @@ jobs:
           cp build/bin/gosshpher "dist/$DIR/build/bin/"
           cp -r build/linux "dist/$DIR/build/"
           cp scripts/install-linux.sh "dist/$DIR/scripts/"
-          cp LICENSE README.md config.example "dist/$DIR/"
+          cp LICENSE README.md CHANGELOG.md config.example "dist/$DIR/"
           tar -C dist -czf "dist/$DIR.tar.gz" "$DIR"
 
       - name: Package (Windows)
@@ -229,7 +236,7 @@ jobs:
         run: |
           $dir = "gosshpher-${{ steps.version.outputs.version }}-${{ matrix.name }}"
           New-Item -ItemType Directory -Force -Path "dist/$dir" | Out-Null
-          Copy-Item build/bin/gosshpher.exe, LICENSE, README.md, config.example "dist/$dir/"
+          Copy-Item build/bin/gosshpher.exe, LICENSE, README.md, CHANGELOG.md, config.example "dist/$dir/"
           Compress-Archive -Path "dist/$dir" -DestinationPath "dist/$dir.zip"
 
       - name: Package (macOS)
@@ -238,7 +245,7 @@ jobs:
           DIR="gosshpher-${{ steps.version.outputs.version }}-${{ matrix.name }}"
           mkdir -p "dist/$DIR"
           cp -R build/bin/*.app "dist/$DIR/"
-          cp LICENSE README.md config.example "dist/$DIR/"
+          cp LICENSE README.md CHANGELOG.md config.example "dist/$DIR/"
           # ditto keeps the bundle structure and extended attributes
           ditto -c -k --keepParent "dist/$DIR" "dist/$DIR.zip"
 
@@ -257,6 +264,13 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            CHANGELOG.md
+            scripts/changelog-section.sh
+          sparse-checkout-cone-mode: false
+
       - uses: actions/download-artifact@v8
         with:
           path: dist
@@ -267,6 +281,11 @@ jobs:
           cd dist
           sha256sum -- * > SHA256SUMS
           cat SHA256SUMS
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          scripts/changelog-section.sh "$GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
 
       - name: Create release
         env:
@@ -280,6 +299,7 @@ jobs:
           gh release create "$GITHUB_REF_NAME" dist/* \
             --repo "$GITHUB_REPOSITORY" \
             --title "GoSSHpher $GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
             --generate-notes \
             --verify-tag \
             "${args[@]}"

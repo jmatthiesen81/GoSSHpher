@@ -122,14 +122,18 @@ cd frontend && npm test && npm run lint
 
 Release steps:
 
+1. In [CHANGELOG.md](../../CHANGELOG.md), turn `## [Unreleased]` into `## [1.2.0] - <date>`, add a new empty `## [Unreleased]` above it and update the compare links at the end.
+2. Commit, then tag and push:
+
 ```bash
-git tag 1.0.0
-git push origin 1.0.0
+git tag 1.2.0
+git push origin 1.2.0
 ```
 
 - The version is the tag name itself (`1.0.0`, pre-releases like `1.0.0-rc.1` also work and are marked as pre-release on GitHub) and written into `wails.json` (`info.productVersion`) during the build only; manual runs use `0.0.0` and keep the archives as workflow artifacts.
+- The release notes are the CHANGELOG section of the version ([scripts/changelog-section.sh](../../scripts/changelog-section.sh)), followed by the notes GitHub generates (merged pull requests, *Full Changelog* link). A tag without its own section stops the workflow in the test job, before the builds; pre-releases fall back to the section of the base version (`1.2.0` for `1.2.0-rc.1`) and then to `[Unreleased]`. Check locally with `scripts/changelog-section.sh 1.2.0`.
 - The Wails CLI version is read from `go.mod`; builds use `-trimpath`, so no local paths end up in the binaries.
-- Archives: `gosshpher-<version>-linux-amd64.tar.gz` (binary, icons, `.desktop` file and `scripts/install-linux.sh` in the repository layout), `…-windows-amd64.zip`, `…-macos-universal.zip` (`.app`), each with `LICENSE`, `README.md` and `config.example`.
+- Archives: `gosshpher-<version>-linux-amd64.tar.gz` (binary, icons, `.desktop` file and `scripts/install-linux.sh` in the repository layout), `…-windows-amd64.zip`, `…-macos-universal.zip` (`.app`), each with `LICENSE`, `README.md`, `CHANGELOG.md` and `config.example`.
 - Builds are not signed (see [Setup](setup.md#code-signing)).
 
 ## Icons
