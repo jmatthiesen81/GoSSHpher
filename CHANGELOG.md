@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - `scripts/release.sh` prepares a release: it turns `[Unreleased]` into the new version, updates the compare links, commits and creates the tag.
+- Dependabot keeps the GitHub Actions, Go modules and frontend npm dependencies up to date with weekly update pull requests.
 
 ## [1.2.0] - 2026-11-13
 
