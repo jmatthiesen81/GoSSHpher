@@ -11,6 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/release.sh` prepares a release: it turns `[Unreleased]` into the new version, updates the compare links, commits and creates the tag.
 - Dependabot keeps the GitHub Actions, Go modules and frontend npm dependencies up to date with weekly update pull requests.
 
+### Fixed
+
+- macOS: the window could not be closed with unsaved changes, because the close dialog had no buttons and always returned an empty answer. It now offers *Discard and quit* and *Cancel*.
+- Opening a terminal only accepts host names made of letters, digits and `.-_:@`. On Windows, characters such as `&`, `|` or `^` in a host alias (e.g. from a shared include) were interpreted by `cmd.exe`.
+- Windows: a config file path containing `& | ^ < > % " ;` now gives a clear error instead of a terminal command that `cmd.exe` or `wt.exe` would misinterpret.
+- A custom terminal command may quote paths with spaces, e.g. `"C:\Program Files\…\term.exe" -e`; an unclosed quote gives an error instead of a crash.
+- *Save as*: if writing the new file fails, the editor stays on the previous file instead of pointing at a file that was never written.
+
 ## [1.2.0] - 2026-11-13
 
 ### Added

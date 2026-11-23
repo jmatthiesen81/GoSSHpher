@@ -42,13 +42,22 @@ func TestSSHCommand(t *testing.T) {
 func TestOpenTerminalRejectsPatterns(t *testing.T) {
 	started := fakeStart(t, "xterm")
 	app := NewApp(DefaultConfigPath())
-	for _, host := range []string{"", "-oProxyCommand=x", "a b", "web*", "!web"} {
+	for _, host := range []string{"", "-oProxyCommand=x", "a b", "web*", "!web",
+		"web&calc", "web|calc", "web^x", "web>out", "%PATH%", `we"b`, "web;id", "$(id)", "`id`", "web\nid"} {
 		if err := app.OpenTerminal(host); err == nil {
 			t.Errorf("%q: expected an error", host)
 		}
 	}
 	if *started != nil {
 		t.Errorf("started %q", *started)
+	}
+}
+
+func TestValidTerminalHost(t *testing.T) {
+	for _, host := range []string{"web", "web-01.example.com", "db_2", "admin@web", "fe80::1", "server-ü"} {
+		if !validTerminalHost(host) {
+			t.Errorf("%q: expected valid", host)
+		}
 	}
 }
 
@@ -108,6 +117,55 @@ func TestTerminalCommandWindows(t *testing.T) {
 	name, args, _ = terminalCommand("windows", "", []string{"ssh", "web"}, "en")
 	if name != "/usr/bin/wt.exe" || strings.Join(args, " ") != "ssh web" {
 		t.Errorf("wt: %s %q", name, args)
+	}
+}
+
+func TestTerminalCommandWindowsUnsafePath(t *testing.T) {
+	started := fakeStart(t, "wt.exe")
+	for _, path := range []string{`C:\a&b\config`, `C:\%USERPROFILE%\config`, `C:\a;b\config`, `C:\a^b\config`} {
+		if _, _, err := terminalCommand("windows", "", []string{"ssh", "-F", path, "web"}, "en"); err == nil {
+			t.Errorf("%q: expected an error", path)
+		}
+	}
+	// spaces are fine, they are quoted when the process is started
+	if _, _, err := terminalCommand("windows", "", []string{"ssh", "-F", `C:\Users\Max Muster\config`, "web"}, "en"); err != nil {
+		t.Errorf("spaces: %v", err)
+	}
+	if *started != nil {
+		t.Errorf("started %q", *started)
+	}
+}
+
+func TestTerminalCommandWindowsCustomWithSpaces(t *testing.T) {
+	fakeStart(t)
+	name, args, err := terminalCommand("windows", `"C:\Program Files\Term\term.exe" -e`, []string{"ssh", "web"}, "en")
+	if err != nil || name != `C:\Program Files\Term\term.exe` || strings.Join(args, "|") != "-e|ssh|web" {
+		t.Errorf("%s %q %v", name, args, err)
+	}
+}
+
+func TestTerminalCommandInvalidCustom(t *testing.T) {
+	fakeStart(t)
+	for _, custom := range []string{`"unterminated -e`, `"" -e`} {
+		if _, _, err := terminalCommand("linux", custom, []string{"ssh", "web"}, "en"); err == nil {
+			t.Errorf("%q: expected an error", custom)
+		}
+	}
+}
+
+func TestSplitCommand(t *testing.T) {
+	cases := map[string]string{
+		"gnome-terminal --wait --":                   "gnome-terminal|--wait|--",
+		`"C:\Program Files\x.exe" -e`:                `C:\Program Files\x.exe|-e`,
+		`'/opt/my term/bin/term' --title 'ssh host'`: "/opt/my term/bin/term|--title|ssh host",
+		"  kitty   ":    "kitty",
+		`term --arg=""`: "term|--arg=",
+	}
+	for in, want := range cases {
+		got, err := splitCommand(in)
+		if err != nil || strings.Join(got, "|") != want {
+			t.Errorf("%q: got %q %v, want %q", in, got, err, want)
+		}
 	}
 }
 

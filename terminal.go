@@ -2,11 +2,13 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"unicode"
 
 	"gosshpher/internal/i18n"
 )
@@ -42,7 +44,7 @@ func (a *App) OpenTerminal(host string) error {
 	custom := a.settings.Terminal
 	a.mu.Unlock()
 
-	if host == "" || strings.HasPrefix(host, "-") || strings.ContainsAny(host, " \t\r\n*?!") {
+	if !validTerminalHost(host) {
 		return errors.New(i18n.T(lang, "error.terminalHost", map[string]string{"host": host}))
 	}
 	ssh := sshCommand(path, host)
@@ -53,6 +55,26 @@ func (a *App) OpenTerminal(host string) error {
 	return startProcess(name, args...)
 }
 
+// validTerminalHost reports whether host can be passed to a terminal as a
+// single ssh destination. Only letters, digits and ".-_:@" are allowed, so
+// neither wildcards nor characters that a shell or cmd.exe would interpret
+// (& | ^ < > % " and the like) can reach the command line. On Windows the
+// arguments are parsed again by cmd.exe, where quoting does not protect them.
+func validTerminalHost(host string) bool {
+	if host == "" || strings.HasPrefix(host, "-") {
+		return false
+	}
+	for _, r := range host {
+		switch {
+		case unicode.IsLetter(r), unicode.IsDigit(r):
+		case strings.ContainsRune(".-_:@", r):
+		default:
+			return false
+		}
+	}
+	return true
+}
+
 // sshCommand is the ssh call for a host of the edited file.
 func sshCommand(path, host string) []string {
 	if path != "" && filepath.Clean(path) != filepath.Clean(DefaultConfigPath()) {
@@ -61,13 +83,76 @@ func sshCommand(path, host string) []string {
 	return []string{"ssh", host}
 }
 
+// windowsUnsafe are the characters that must not appear in the arguments of
+// the ssh command on Windows.
+const windowsUnsafe = `&|^<>%";`
+
+// splitCommand splits a command line from the settings into program and
+// arguments. Arguments are separated by white space; double or single quotes
+// group text with spaces, e.g. "C:\Program Files\Terminal\term.exe" -e.
+// Backslashes are kept as they are, so Windows paths need no escaping.
+func splitCommand(s string) ([]string, error) {
+	var (
+		args  []string
+		cur   strings.Builder
+		quote rune
+		inArg bool
+	)
+	for _, r := range s {
+		switch {
+		case quote != 0:
+			if r == quote {
+				quote = 0
+			} else {
+				cur.WriteRune(r)
+			}
+		case r == '"' || r == '\'':
+			quote, inArg = r, true
+		case unicode.IsSpace(r):
+			if inArg {
+				args = append(args, cur.String())
+				cur.Reset()
+				inArg = false
+			}
+		default:
+			cur.WriteRune(r)
+			inArg = true
+		}
+	}
+	if quote != 0 {
+		return nil, fmt.Errorf("missing closing %c", quote)
+	}
+	if inArg {
+		args = append(args, cur.String())
+	}
+	if len(args) > 0 && args[0] == "" {
+		return nil, errors.New("empty program name")
+	}
+	return args, nil
+}
+
 // terminalCommand returns the program and arguments that open a terminal
 // running the ssh command.
 func terminalCommand(goos, custom string, ssh []string, lang string) (string, []string, error) {
+	var customArgs []string
+	if custom != "" {
+		f, err := splitCommand(custom)
+		if err != nil {
+			return "", nil, errors.New(i18n.T(lang, "error.terminalCommand", map[string]string{"error": err.Error()}))
+		}
+		customArgs = f
+	}
+
 	if goos == "windows" {
-		if custom != "" {
-			f := strings.Fields(custom)
-			return f[0], append(f[1:], ssh...), nil
+		// wt.exe splits its arguments at ";" and cmd.exe reinterprets
+		// & | ^ < > % " even in quoted arguments
+		for _, arg := range ssh {
+			if strings.ContainsAny(arg, windowsUnsafe) {
+				return "", nil, errors.New(i18n.T(lang, "error.terminalPath", map[string]string{"chars": windowsUnsafe}))
+			}
+		}
+		if len(customArgs) > 0 {
+			return customArgs[0], append(customArgs[1:], ssh...), nil
 		}
 		if wt, err := lookPath("wt.exe"); err == nil {
 			return wt, ssh, nil
@@ -83,9 +168,8 @@ func terminalCommand(goos, custom string, ssh []string, lang string) (string, []
 	if err != nil {
 		return "", nil, err
 	}
-	if custom != "" {
-		f := strings.Fields(custom)
-		return f[0], append(f[1:], script), nil
+	if len(customArgs) > 0 {
+		return customArgs[0], append(customArgs[1:], script), nil
 	}
 	if goos == "darwin" {
 		return "open", []string{"-a", "Terminal", script}, nil

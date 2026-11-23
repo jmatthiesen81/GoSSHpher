@@ -96,15 +96,29 @@ func (a *App) beforeClose(ctx context.Context) bool {
 	if !dirty {
 		return false
 	}
+	discard := i18n.T(lang, "dialog.close.discard", nil)
+	cancel := i18n.T(lang, "dialog.close.cancel", nil)
 	answer, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 		Type:    runtime.QuestionDialog,
 		Title:   i18n.T(lang, "dialog.close.title", nil),
 		Message: i18n.T(lang, "dialog.close.text", nil),
+		// Only macOS uses these buttons and returns the label of the chosen
+		// one; without them it shows a single unnamed button and returns "".
+		Buttons:       []string{discard, cancel},
+		DefaultButton: cancel,
+		CancelButton:  cancel,
 	})
 	if err != nil {
 		return false
 	}
-	return answer != "Yes" && answer != "Ok"
+	return !closeConfirmed(answer, discard)
+}
+
+// closeConfirmed reports whether the answer of the close dialog means "quit
+// and discard": Linux and Windows show Yes/No and return "Yes", macOS returns
+// the label of the chosen button.
+func closeConfirmed(answer, discard string) bool {
+	return answer == "Yes" || answer == discard
 }
 
 // load reads a file; a missing file starts an empty config.
@@ -274,6 +288,7 @@ func (a *App) SaveAs() (State, error) {
 		return a.GetState(), err
 	}
 	a.mu.Lock()
+	oldPath, oldDisk, oldExists := a.path, a.diskText, a.exists
 	a.path = path
 	if data, err := os.ReadFile(path); err == nil {
 		a.diskText, a.exists = string(data), true
@@ -281,7 +296,16 @@ func (a *App) SaveAs() (State, error) {
 		a.diskText, a.exists = "", false
 	}
 	a.mu.Unlock()
-	return a.save(true)
+	st, err := a.save(true)
+	if err != nil {
+		// keep editing the previous file, so Save does not silently write to
+		// a path that was never written successfully
+		a.mu.Lock()
+		a.path, a.diskText, a.exists = oldPath, oldDisk, oldExists
+		a.mu.Unlock()
+		a.updateTitle()
+	}
+	return st, err
 }
 
 func (a *App) save(force bool) (State, error) {

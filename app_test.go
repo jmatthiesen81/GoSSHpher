@@ -183,3 +183,20 @@ func TestSaveWithoutBackup(t *testing.T) {
 		t.Errorf("backup written although disabled: %v", b)
 	}
 }
+
+func TestCloseConfirmed(t *testing.T) {
+	for _, c := range []struct {
+		answer string
+		want   bool
+	}{
+		{"Yes", true},              // Linux, Windows
+		{"Discard and quit", true}, // macOS: label of the chosen button
+		{"No", false},              // Linux, Windows
+		{"Cancel", false},          // macOS
+		{"", false},                // dialog closed without a choice
+	} {
+		if got := closeConfirmed(c.answer, "Discard and quit"); got != c.want {
+			t.Errorf("%q: got %v", c.answer, got)
+		}
+	}
+}
