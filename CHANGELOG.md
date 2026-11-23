@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-23
+
 ### Added
 
 - `scripts/release.sh` prepares a release: it turns `[Unreleased]` into the new version, updates the compare links, commits and creates the tag.
@@ -70,7 +72,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Safe saving with configurable backups, atomic writes and a conflict check against external changes.
 - User interface in English and German.
 
-[Unreleased]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.2.1...HEAD
+[1.2.1]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.0.1...1.1.0
 [1.0.1]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.0.0...1.0.1
