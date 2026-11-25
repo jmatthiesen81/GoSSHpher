@@ -1,6 +1,6 @@
 // Settings dialog and switching of the UI language.
 
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {applyStatic, esc, language, setCatalog, t} from './i18n';
 import {gdValidate} from './groupDialog';
 import {$, S, setCollator} from './state';

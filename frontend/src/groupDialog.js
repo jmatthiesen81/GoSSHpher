@@ -1,6 +1,6 @@
 // Dialog to create or edit a group: name plus hosts as tokens with autocompletion.
 
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {esc, t, th} from './i18n';
 import {afterStructureChange, groupKey, groupMembers, groupNameError, ungroup} from './groups';
 import {$, blockIndex, collator, optionValue, S, splitPatterns, store} from './state';

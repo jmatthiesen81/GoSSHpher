@@ -1,6 +1,6 @@
 // File actions (save, reload), editor/text views and the save split button.
 
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {t} from './i18n';
 import {$, blockIndex, S} from './state';
 import {applyState, flush, renderAll, renderStatus, showError} from './sync';

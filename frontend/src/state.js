@@ -1,6 +1,6 @@
 // Shared state, small helpers about blocks and the persistence of view settings.
 
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {t} from './i18n';
 import {showError} from './sync';
 

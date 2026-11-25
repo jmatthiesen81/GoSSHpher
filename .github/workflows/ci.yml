@@ -20,6 +20,12 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # Wails v3 links GTK4/WebKitGTK 6.0 on Linux, also for vet and test
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev
+
       # go:embed needs frontend/dist, which only holds .gitkeep in git;
       # the OpenSSH comparison test uses the preinstalled ssh client.
       - name: Vet
@@ -33,6 +39,17 @@ jobs:
           unformatted=$(gofmt -l .)
           if [ -n "$unformatted" ]; then
             echo "Not gofmt-formatted:"; echo "$unformatted"; exit 1
+          fi
+
+      # frontend/bindings is generated from the Go service and committed
+      - name: Check generated bindings
+        run: |
+          WAILS_VERSION=$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v3)
+          go install "github.com/wailsapp/wails/v3/cmd/wails3@${WAILS_VERSION}"
+          wails3 generate bindings -clean=true -i
+          if [ -n "$(git status --porcelain frontend/bindings)" ]; then
+            git status --short frontend/bindings
+            echo "frontend/bindings is out of date: run 'wails3 generate bindings -clean=true -i'"; exit 1
           fi
 
   frontend:

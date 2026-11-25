@@ -34,6 +34,10 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev
       - run: go vet ./...
       - run: go test ./...
       # fail before the long builds when the release has no CHANGELOG section
@@ -50,16 +54,13 @@ jobs:
         include:
           - name: linux-amd64
             os: ubuntu-24.04
-            platform: linux/amd64
-            tags: webkit2_41
+            task: build:linux
           - name: windows-amd64
             os: windows-latest
-            platform: windows/amd64
-            tags: ""
+            task: build:windows
           - name: macos-universal
             os: macos-latest
-            platform: darwin/universal
-            tags: ""
+            task: build:darwin:universal
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -84,12 +85,12 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev
 
       - name: Install Wails CLI (version from go.mod)
         run: |
-          WAILS_VERSION=$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v2)
-          go install "github.com/wailsapp/wails/v2/cmd/wails@${WAILS_VERSION}"
+          WAILS_VERSION=$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v3)
+          go install "github.com/wailsapp/wails/v3/cmd/wails3@${WAILS_VERSION}"
 
       - name: Set version
         id: version
@@ -100,18 +101,12 @@ jobs:
             VERSION="0.0.0"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          jq --arg v "$VERSION" '.info.productVersion = $v' wails.json > wails.json.tmp
-          mv wails.json.tmp wails.json
+          scripts/set-version.sh "$VERSION"
 
       - name: Build
         run: |
-          # main.version enables the update check (see update.go)
-          args=(-clean -trimpath -platform "${{ matrix.platform }}"
-                -ldflags "-X main.version=${{ steps.version.outputs.version }}")
-          if [[ -n "${{ matrix.tags }}" ]]; then
-            args+=(-tags "${{ matrix.tags }}")
-          fi
-          wails build "${args[@]}"
+          # VERSION ends up in main.version and enables the update check (see update.go)
+          wails3 task "${{ matrix.task }}" VERSION="${{ steps.version.outputs.version }}"
           ls -la build/bin
 
       # Secrets cannot be used in "if:" directly; this step tells the

@@ -3,8 +3,9 @@
 
     python3 scripts/icons.py
 
-Writes build/windows/icon.ico and build/linux/icons/hicolor/<size>/apps/gosshpher.png
-and copies build/appicon.svg as the scalable Linux icon. Requires Pillow.
+Writes build/windows/icon.ico, build/darwin/icons.icns (macOS app bundle) and
+build/linux/icons/hicolor/<size>/apps/gosshpher.png and copies build/appicon.svg
+as the scalable Linux icon. Requires Pillow.
 """
 import shutil
 from pathlib import Path
@@ -25,6 +26,11 @@ def main() -> None:
     ico = ROOT / "build" / "windows" / "icon.ico"
     img.save(ico, sizes=[(s, s) for s in ICO_SIZES])
     print("wrote", ico.relative_to(ROOT))
+
+    # Pillow derives all ICNS sizes (16 to 1024 incl. @2x) from the source
+    icns = ROOT / "build" / "darwin" / "icons.icns"
+    img.save(icns)
+    print("wrote", icns.relative_to(ROOT))
 
     hicolor = ROOT / "build" / "linux" / "icons" / "hicolor"
     for s in LINUX_SIZES:

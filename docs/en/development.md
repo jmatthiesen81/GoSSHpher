@@ -6,25 +6,26 @@ Code structure, tests and conventions for working on GoSSHpher.
 
 ```
 .
-├── main.go, app.go, app_test.go   Wails entry point and bound API
+├── main.go, app.go, app_test.go   Wails entry point and the App service
 ├── internal/sshconfig/            core library (no UI, no Wails dependency)
 ├── frontend/
 │   ├── index.html                 static layout, dialogs
 │   ├── src/*.js                   UI logic as ES modules (see below)
 │   ├── src/style.css              styles, light/dark theme
-│   ├── wailsjs/                   generated bindings (checked in)
+│   ├── bindings/                  generated bindings (checked in)
 │   ├── test/                      Vitest unit tests
 │   ├── vite.config.js             rewrites dist/.gitignore after each build
 │   └── dist/                      build output (only its .gitignore is tracked)
-├── build/                         icons and platform files (bin/ is ignored)
-├── scripts/                       icons.py, install-linux.sh
+├── Taskfile.yml                   build tasks (run by wails3 build / wails3 task)
+├── build/                         icons, platform files, config.yml for wails3 dev (bin/ is ignored)
+├── scripts/                       icons.py, install-linux.sh, set-version.sh, release scripts
 └── config.example                 sample configuration
 ```
 
 ## Go
 
 - `internal/sshconfig` is a plain Go package and can be used and tested without Wails.
-- `app.go` is the only place that touches the file system for the edited file; it guards state with a mutex because Wails calls bound methods concurrently.
+- `app.go` is the only place that touches the file system for the edited file; it guards state with a mutex because Wails calls service methods concurrently.
 - New keywords go into the `keywords` slice in [keywords.go](../../internal/sshconfig/keywords.go): `Name`, `Multi` for cumulative keywords, optional `Values` for the value suggestions; the description goes into every catalog as `kw.<Name>`. Deprecated names go into the alias map below it.
 - Language: code comments, script output and metadata (e.g. the `.desktop` file) are in English; metadata gets German translations (`[de]` keys). All UI texts come from the translation catalogs (see below).
 - Formatting: `gofmt`; `go vet ./...` is clean.
@@ -57,17 +58,17 @@ Code structure, tests and conventions for working on GoSSHpher.
 
 ### Bindings
 
-`frontend/wailsjs/go/main/App.js` and `models.ts` are generated from the exported methods of `App`. After adding or changing a bound method run:
+`frontend/bindings/gosshpher/app.js` and the models (JSDoc types) are generated from the exported methods of the `App` service; the frontend imports them as `import * as Go from '../bindings/gosshpher/app.js'`. After adding or changing a service method run:
 
 ```bash
-wails generate module
+wails3 generate bindings -clean=true -i
 ```
 
-(`wails build` and `wails dev` do this too.)
+(`wails3 build` and `wails3 dev` do this too; CI fails when the checked-in bindings are out of date.) `-i` makes the methods return plain JSON objects instead of model class instances. Errors returned by Go reject the promise with a `RuntimeError` whose `message` is the Go error text.
 
 ### Testing the UI
 
-`wails dev -tags webkit2_41` opens the app window and also serves the frontend with working bindings at <http://localhost:34115>, so browser developer tools can be used.
+`wails3 dev` opens the app window with the frontend served by the Vite dev server (port 9245, or `WAILS_VITE_PORT`); frontend changes reload immediately, Go changes rebuild and restart the app.
 
 ## Translations
 
@@ -117,7 +118,7 @@ cd frontend && npm test && npm run lint
 
 | Workflow                                           | Trigger                                 | Does                                                                                                                                             |
 | -------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [ci.yml](../../.github/workflows/ci.yml)           | Push to any branch, pull request        | `go vet`, `go test`, `gofmt` check; ESLint and Vitest for the frontend                                                                           |
+| [ci.yml](../../.github/workflows/ci.yml)           | Push to any branch, pull request        | `go vet`, `go test`, `gofmt` check, generated bindings up to date; ESLint and Vitest for the frontend                                            |
 | [release.yml](../../.github/workflows/release.yml) | Tag `1.2.3` (no `v` prefix), manual run | Tests, then builds Linux (amd64), Windows (amd64) and macOS (universal); on a tag it creates a GitHub release with the archives and `SHA256SUMS` |
 
 Release steps:
@@ -135,9 +136,9 @@ git push origin 1.2.0
 
 The script refuses invalid versions (`v1.2.0`), existing tags, uncommitted changes and an empty `[Unreleased]` section, and notes when the branch name (`1.1`) does not match the version. Before pushing, `git tag -d 1.2.0` (and `git reset --hard HEAD~1` if it committed) undoes it.
 
-- The version is the tag name itself (`1.0.0`, pre-releases like `1.0.0-rc.1` also work and are marked as pre-release on GitHub) and written into `wails.json` (`info.productVersion`) during the build only; manual runs use `0.0.0` and keep the archives as workflow artifacts.
+- The version is the tag name itself (`1.0.0`, pre-releases like `1.0.0-rc.1` also work and are marked as pre-release on GitHub) and written into `build/darwin/Info.plist` and the Windows resources by [scripts/set-version.sh](../../scripts/set-version.sh) during the build only (Windows gets the numeric part, `1.0.0` for `1.0.0-rc.1`); manual runs use `0.0.0` and keep the archives as workflow artifacts.
 - The release notes are the CHANGELOG section of the version ([scripts/changelog-section.sh](../../scripts/changelog-section.sh)), followed by the notes GitHub generates (merged pull requests, *Full Changelog* link). A tag without its own section stops the workflow in the test job, before the builds; pre-releases fall back to the section of the base version (`1.2.0` for `1.2.0-rc.1`) and then to `[Unreleased]`. Check locally with `scripts/changelog-section.sh 1.2.0`.
-- The Wails CLI version is read from `go.mod`; builds use `-trimpath`, so no local paths end up in the binaries.
+- The Wails CLI (`wails3`) is installed in the version from `go.mod`; the jobs run `wails3 task build:linux`, `build:windows` and `build:darwin:universal` from [Taskfile.yml](../../Taskfile.yml), which use `-trimpath`, so no local paths end up in the binaries.
 - Archives: `gosshpher-<version>-linux-amd64.tar.gz` (binary, icons, `.desktop` file and `scripts/install-linux.sh` in the repository layout), `…-windows-amd64.zip`, `…-macos-universal.zip` (`.app`), each with `LICENSE`, `README.md`, `CHANGELOG.md` and `config.example`.
 - Builds are not signed (see [Setup](setup.md#code-signing)).
 

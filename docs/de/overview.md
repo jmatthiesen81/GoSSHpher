@@ -65,7 +65,7 @@ Das Frontend hält das bearbeitete Dokument und schickt es nach jeder Änderung 
 ## Kontext
 
 - Modulname `gosshpher` ([go.mod](../../go.mod)); im Repository ist kein Remote eingerichtet.
-- Lizenz: [Mozilla Public License 2.0](../../LICENSE). Die Autorenangaben stehen in [wails.json](../../wails.json).
+- Lizenz: [Mozilla Public License 2.0](../../LICENSE).
 - [config.example](../../config.example) enthält fiktive Hosts zum Ausprobieren. `config.template` und Backups (`config.*`) schließt die [.gitignore](../../.gitignore) aus, weil sie echte Serverdaten enthalten können.
 
 [Index](index.md) · [English](../en/overview.md)

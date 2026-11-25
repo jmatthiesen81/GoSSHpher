@@ -1,5 +1,5 @@
 import './style.css';
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {t} from './i18n';
 import {addBlock, blockAction, select} from './editor';
 import {applyText, closeSaveMenu, confirmDiscard, doSave, setupSaveMenu, setView} from './files';

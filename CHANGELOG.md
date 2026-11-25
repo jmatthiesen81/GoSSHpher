@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **Wails v3.1** replaces Wails v2. The Go backend is now a Wails service, the frontend uses the generated bindings in `frontend/bindings/` and the `@wailsio/runtime` package.
+- Linux builds use GTK4 and WebKitGTK 6.0 (`libgtk-4-dev libwebkitgtk-6.0-dev`); `wails3 build EXTRA_TAGS=gtk3` still builds against GTK3 / WebKit2GTK 4.1.
+- macOS 12 or later is required.
+- Building: `wails3 build` with the tasks in `Taskfile.yml` replaces `wails build` and `wails.json`; `wails3 dev` replaces `wails dev`. `scripts/set-version.sh` writes the release version into the macOS and Windows build files, and `scripts/icons.py` also creates the macOS icon.
+- The question about unsaved changes on closing or quitting uses the dialog buttons on all platforms (*Discard and quit* / *Cancel*), no longer Yes/No on Linux and Windows.
+- CI checks that the checked-in bindings are up to date.
+
+### Removed
+
+- The unused Wails v2 NSIS installer templates (`build/windows/installer/`).
+
 ## [1.2.1] - 2026-11-23
 
 ### Added

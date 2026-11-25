@@ -2,7 +2,7 @@
 import {vi, describe, expect, it} from 'vitest';
 import {host, load} from './helpers';
 
-vi.mock('../wailsjs/go/main/App', () => ({}));
+vi.mock('../bindings/gosshpher/app.js', () => ({}));
 vi.mock('../src/inspector', () => ({renderEffective: vi.fn(), renderIssues: vi.fn(), inspectorTab: vi.fn()}));
 vi.mock('../src/sync', () => ({
     scheduleSync: vi.fn(), renderAll: vi.fn(), renderStatus: vi.fn(), flush: vi.fn(), showError: vi.fn(),

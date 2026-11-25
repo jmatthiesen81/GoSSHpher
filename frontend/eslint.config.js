@@ -4,7 +4,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-    {ignores: ['dist/', 'wailsjs/']},
+    {ignores: ['dist/', 'bindings/']},
     js.configs.recommended,
     {
         files: ['src/**/*.js', 'test/**/*.js', '*.config.js'],

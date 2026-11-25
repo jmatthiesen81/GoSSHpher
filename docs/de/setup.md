@@ -8,34 +8,35 @@ Wie GoSSHpher unter Linux, macOS und Windows aus dem Quellcode gebaut und instal
 | ------------- | -------------------------------------------------------------- | ----------------------------------------------------------- |
 | Go            | ≥ 1.26 (`go 1.26.0` in [go.mod](../../go.mod))                 | <https://go.dev/dl/>                                        |
 | Node.js + npm | eine von Vite 7 unterstützte Version (Node 20.19+ oder 22.12+) | <https://nodejs.org>                                        |
-| Wails-CLI     | v2 (das Projekt nutzt `github.com/wailsapp/wails/v2 v2.17.1`)  | `go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.1` |
+| Wails-CLI     | v3 (das Projekt nutzt `github.com/wailsapp/wails/v3 v3.1.0`)   | `go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0` |
 
 Systempakete je Plattform:
 
-| Plattform                       | Pakete                                                                           | Hinweise                            |
-| ------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------- |
-| Ubuntu 24.04+, Debian 13        | `sudo apt install build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev` | Mit `-tags webkit2_41` bauen        |
-| Älteres Linux mit WebKitGTK 4.0 | `libgtk-3-dev libwebkit2gtk-4.0-dev`                                             | Ohne das Tag bauen                  |
-| macOS                           | `xcode-select --install`                                                         | Muss auf einem Mac gebaut werden    |
-| Windows                         | WebView2-Runtime (bei Windows 10/11 vorinstalliert)                              | Kann auch unter Linux gebaut werden |
+| Plattform                | Pakete                                                                          | Hinweise                                     |
+| ------------------------ | ------------------------------------------------------------------------------- | -------------------------------------------- |
+| Ubuntu 24.04+, Debian 13 | `sudo apt install build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev` | Standard: GTK4 / WebKitGTK 6.0               |
+| Linux ohne WebKitGTK 6.0 | `libgtk-3-dev libwebkit2gtk-4.1-dev`                                            | Mit `EXTRA_TAGS=gtk3` bauen                  |
+| macOS                    | `xcode-select --install`                                                        | Muss auf einem Mac gebaut werden (macOS 12+) |
+| Windows                  | WebView2-Runtime (bei Windows 10/11 vorinstalliert)                             | Kann auch unter Linux gebaut werden          |
 
-`wails doctor` prüft die installierten Abhängigkeiten.
+`wails3 doctor` prüft die installierten Abhängigkeiten.
 
 ## Build
 
 ```bash
-wails build -tags webkit2_41            # Linux → build/bin/gosshpher
-wails build                             # macOS (.app) / Windows (.exe) auf der jeweiligen Plattform
-wails build -platform windows/amd64     # Windows-Binary unter Linux
-wails build -platform darwin/universal  # auf einem Mac: Intel + Apple Silicon
+wails3 build                              # dieses Betriebssystem: Linux → build/bin/gosshpher, macOS → build/bin/GoSSHpher.app, Windows → build/bin/gosshpher.exe
+wails3 build EXTRA_TAGS=gtk3              # Linux mit GTK3 / WebKit2GTK 4.1
+wails3 task build:windows                 # Windows-Binary unter Linux (ohne cgo)
+wails3 task build:darwin:universal        # auf einem Mac: Intel + Apple Silicon
+wails3 build VERSION=1.2.3                # Version setzen (aktiviert die Update-Prüfung)
 ```
 
-Mit `-trimpath` landen keine lokalen Pfade (und damit auch nicht der Benutzername) im Binary. `wails build` installiert die Frontend-Abhängigkeiten (`npm install`), baut das Frontend (`npm run build` → `frontend/dist`), erzeugt die Bindings in `frontend/wailsjs/` neu und kompiliert das Go-Binary. Die Befehle stammen aus [wails.json](../../wails.json).
+Die Tasks sind in [Taskfile.yml](../../Taskfile.yml) definiert und laufen über den in die Wails-CLI eingebauten Task-Runner. Ein Build installiert die Frontend-Abhängigkeiten (`npm install`), erzeugt die Bindings in `frontend/bindings/` neu (`wails3 generate bindings -clean=true -i`), baut das Frontend (`npm run build` → `frontend/dist`) und kompiliert das Go-Binary mit `-tags production -trimpath`, sodass keine lokalen Pfade (und damit auch nicht der Benutzername) im Binary landen. Unter Windows werden Icon, Manifest und Versionsinformationen als `.syso`-Ressource eingebunden; unter macOS wird das Binary in ein ad hoc signiertes `.app`-Bundle verpackt.
 
-Entwicklungsmodus mit Hot Reload:
+Entwicklungsmodus mit Live Reload (konfiguriert in [build/config.yml](../../build/config.yml)):
 
 ```bash
-wails dev -tags webkit2_41
+wails3 dev
 ```
 
 Fertige Archive für alle Plattformen hängen an den GitHub-Releases (siehe [Entwicklung → CI und Releases](development.md#ci-und-releases)). Das Linux-Archiv enthält `scripts/install-linux.sh`.
@@ -54,7 +55,7 @@ Das erste Argument ist die zu bearbeitende Datei, sofern es nicht mit `-` beginn
 [scripts/install-linux.sh](../../scripts/install-linux.sh) installiert das gebaute Binary, die Icons und einen Menüeintrag für den aktuellen Benutzer:
 
 ```bash
-wails build -tags webkit2_41 && scripts/install-linux.sh
+wails3 build && scripts/install-linux.sh
 scripts/install-linux.sh --uninstall
 ```
 
@@ -64,7 +65,7 @@ scripts/install-linux.sh --uninstall
 | Icons       | `${XDG_DATA_HOME:-~/.local/share}/icons/hicolor/<größe>/apps/gosshpher.png` und `scalable/apps/gosshpher.svg`                                                                                                                                         |
 | Menüeintrag | `${XDG_DATA_HOME:-~/.local/share}/applications/de.netinventors.gosshpher.desktop` (aus [build/linux/de.netinventors.gosshpher.desktop](../../build/linux/de.netinventors.gosshpher.desktop), `Exec` auf den absoluten Pfad des Binarys umgeschrieben) |
 
-Das Skript aktualisiert Desktop-Datenbank und Icon-Cache, wenn die Werkzeuge vorhanden sind. Nach jedem neuen Build muss es erneut laufen. Das Fenster setzt die App-ID `de.netinventors.gosshpher` als Programmnamen (WM-Klasse / Wayland-App-ID); sie entspricht dem Namen der `.desktop`-Datei und deren `StartupWMClass`, sodass der Desktop Fenster, Menüeintrag und Icon zusammenbringt. Binary und Icon behalten den kurzen Namen `gosshpher`.
+Das Skript aktualisiert Desktop-Datenbank und Icon-Cache, wenn die Werkzeuge vorhanden sind. Nach jedem neuen Build muss es erneut laufen. Die App setzt `de.netinventors.gosshpher` als GTK-Anwendungs-ID, die auch zum Programmnamen wird (WM-Klasse / Wayland-App-ID); sie entspricht dem Namen der `.desktop`-Datei und deren `StartupWMClass`, sodass der Desktop Fenster, Menüeintrag und Icon zusammenbringt. Binary und Icon behalten den kurzen Namen `gosshpher`.
 
 ## Code-Signing
 
@@ -104,14 +105,13 @@ Code-Signing-Schlüssel müssen seit 2023 auf Hardware liegen; eine `.pfx`-Datei
 
 Der Workflow signiert `gosshpher.exe` mit SHA-256 und RFC-3161-Zeitstempel und prüft die Signatur mit `Get-AuthenticodeSignature`. Eine kostenlose Alternative für Open-Source-Projekte ist die [SignPath Foundation](https://signpath.org/); deren Zertifikat nennt die Stiftung als Herausgeber, und sie setzt eine Bewerbung voraus.
 
-Einen NSIS-Installer erzeugt zusätzlich `wails build -nsis` (benötigt `nsis`; Vorlagen in [build/windows/installer/](../../build/windows/installer/)); der Workflow baut ihn noch nicht.
-
 ## Icons
 
 | Datei                                                          | Rolle                                                                          |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [build/appicon.svg](../../build/appicon.svg)                   | Vorlage (Terminal-Prompt und Schlüssel auf abgerundetem Quadrat)               |
-| [build/appicon.png](../../build/appicon.png)                   | Export in 1024×1024; Wails erzeugt daraus das macOS-`.icns`                    |
+| [build/appicon.png](../../build/appicon.png)                   | Export in 1024×1024, Vorlage für alle anderen Größen                           |
+| [build/darwin/icons.icns](../../build/darwin/icons.icns)       | macOS-Icon des App-Bundles                                                     |
 | [build/windows/icon.ico](../../build/windows/icon.ico)         | Windows-Icon, 16–256 px                                                        |
 | [build/linux/icons/hicolor/](../../build/linux/icons/hicolor/) | Linux-Icons 16–512 px und SVG; das 256-px-PNG ist als Fenster-Icon eingebettet |
 
@@ -123,7 +123,7 @@ rsvg-convert -w 1024 -h 1024 build/appicon.svg -o build/appicon.png
 # 2. alle Größen ableiten (benötigt Pillow)
 python3 scripts/icons.py
 # 3. neu bauen
-wails build -tags webkit2_41
+wails3 build
 ```
 
 [Index](index.md) · [English](../en/setup.md)
