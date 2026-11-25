@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-25
+
 ### Changed
 
 - **Wails v3.1** replaces Wails v2. The Go backend is now a Wails service, the frontend uses the generated bindings in `frontend/bindings/` and the `@wailsio/runtime` package.
@@ -86,7 +88,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Safe saving with configurable backups, atomic writes and a conflict check against external changes.
 - User interface in English and German.
 
-[Unreleased]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.2.1...HEAD
+[Unreleased]: https://github.com/jmatthiesen81/GoSSHpher/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.2.1...2.0.0
 [1.2.1]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/jmatthiesen81/GoSSHpher/compare/1.0.1...1.1.0
