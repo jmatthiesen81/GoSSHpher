@@ -31,7 +31,8 @@ func main() {
 			application.NewService(app),
 		},
 		Assets: application.AssetOptions{
-			Handler: application.AssetFileServerFS(assets),
+			Handler:    application.AssetFileServerFS(assets),
+			Middleware: themeMiddleware(app.isDarkMode),
 		},
 		// Quitting via the menu or Cmd+Q (macOS) goes through the same
 		// "discard unsaved changes?" question as closing the window.
@@ -55,7 +56,8 @@ func main() {
 		Height:           900,
 		MinWidth:         900,
 		MinHeight:        600,
-		BackgroundColour: application.NewRGB(255, 255, 255),
+		// replaced in ServiceStartup by the colour of the system theme
+		BackgroundColour: backgroundLight,
 		URL:              "/",
 		Linux: application.LinuxWindow{
 			Icon: icon,

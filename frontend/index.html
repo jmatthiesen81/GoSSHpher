@@ -4,8 +4,18 @@
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>GoSSHpher</title>
+    <!-- served by the Go side (theme.go): sets data-theme on <html> before the first paint -->
+    <script src="/theme.js" vite-ignore></script>
 </head>
 <body>
+<!-- loading screen until the first render; hidden by hideSplash() in src/theme.js -->
+<div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-mark">
+        <div class="splash-ring"></div>
+        <span class="splash-prompt">&gt;<span class="splash-cursor">_</span></span>
+    </div>
+    <div class="splash-name">GoSSHpher</div>
+</div>
 <!-- Texts are translated at runtime from internal/i18n/locales/*.json (see src/i18n.js);
      the English texts here are only the fallback before the catalog is loaded. -->
 <header class="toolbar">

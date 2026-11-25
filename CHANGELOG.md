@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- A short loading screen while the app starts, in the colours of the system theme.
+
+### Fixed
+
+- Linux (GTK4 build): the app started in the light theme although the desktop prefers dark, e.g. on Ubuntu 24.04 with GTK 4.14, where WebKitGTK 6.0 only sees the dark preference with `gtk-application-prefer-dark-theme` in `~/.config/gtk-4.0/settings.ini`. The theme now comes from the system setting as Wails reads it (freedesktop portal on Linux), on every platform, and follows changes while the app runs.
+- The window no longer flashes white before the page is drawn in the dark theme.
+
 ## [2.0.0] - 2026-11-25
 
 ### Changed

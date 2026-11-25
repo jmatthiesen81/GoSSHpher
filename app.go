@@ -85,6 +85,7 @@ func (a *App) attach(app *application.App, window *application.WebviewWindow) {
 
 // ServiceStartup is called by Wails before the window loads the frontend.
 func (a *App) ServiceStartup(context.Context, application.ServiceOptions) error {
+	a.setupTheme()
 	if s, err := loadSettings(a.settingsPath); err != nil {
 		a.logError("settings", a.settingsPath, err)
 		a.settingsErr = err.Error()

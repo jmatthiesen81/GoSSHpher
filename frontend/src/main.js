@@ -15,10 +15,12 @@ import {applyState, matchesFilter, renderAll, showError} from './sync';
 import {setupDatalists, toast} from './ui';
 import {redo, resetHistory, undo} from './history';
 import {checkForUpdate, setupUpdateNotice} from './update';
+import {hideSplash, setupTheme} from './theme';
 
 // ---------------------------------------------------------------- init ---
 
 async function init() {
+    setupTheme();
     S.settingsInfo = await Go.GetSettings();
     S.languages = await Go.Languages();
     await loadLanguage(S.settingsInfo.settings.language, {render: false});
@@ -143,4 +145,4 @@ async function init() {
     });
 }
 
-init().catch(showError);
+init().catch(showError).finally(hideSplash);
