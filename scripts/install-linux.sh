@@ -28,6 +28,8 @@ fi
 [ -x "$ROOT/build/bin/gosshpher" ] || { echo "build/bin/gosshpher is missing – run 'wails3 build' first." >&2; exit 1; }
 
 install -Dm755 "$ROOT/build/bin/gosshpher" "$BIN_DIR/gosshpher"
+# drop icons of an earlier install (e.g. a scalable SVG that would win over the PNGs)
+find "$ICON_DIR" -path '*/apps/gosshpher.*' -delete 2>/dev/null || true
 (cd "$ROOT/build/linux/icons/hicolor" && find . -name 'gosshpher.*' | while read -r f; do
     install -Dm644 "$f" "$ICON_DIR/$f"
 done)

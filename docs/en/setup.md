@@ -62,7 +62,7 @@ scripts/install-linux.sh --uninstall
 | What       | Target                                                                                                                                                                                                                                      |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Binary     | `${XDG_BIN_HOME:-~/.local/bin}/gosshpher`                                                                                                                                                                                                   |
-| Icons      | `${XDG_DATA_HOME:-~/.local/share}/icons/hicolor/<size>/apps/gosshpher.png` and `scalable/apps/gosshpher.svg`                                                                                                                                |
+| Icons      | `${XDG_DATA_HOME:-~/.local/share}/icons/hicolor/<size>/apps/gosshpher.png` (icons of an earlier install are removed first)                                                                                                                  |
 | Menu entry | `${XDG_DATA_HOME:-~/.local/share}/applications/de.netinventors.gosshpher.desktop` (from [build/linux/de.netinventors.gosshpher.desktop](../../build/linux/de.netinventors.gosshpher.desktop), `Exec` rewritten to the absolute binary path) |
 
 The script refreshes the desktop database and icon cache if the tools exist. Run it again after every new build. The app sets `de.netinventors.gosshpher` as GTK application id, which also becomes the program name (WM class / Wayland app id); it matches the name of the `.desktop` file and its `StartupWMClass`, so the desktop links the window to the menu entry and icon. Binary and icon keep the short name `gosshpher`.
@@ -107,23 +107,22 @@ The workflow signs `gosshpher.exe` with SHA-256 and an RFC 3161 timestamp and ch
 
 ## Icons
 
-| File                                                           | Role                                                                     |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [build/appicon.svg](../../build/appicon.svg)                   | Source design (terminal prompt and key on a rounded square)              |
-| [build/appicon.png](../../build/appicon.png)                   | 1024×1024 export, source of all other sizes                              |
-| [build/darwin/icons.icns](../../build/darwin/icons.icns)       | macOS icon of the app bundle                                             |
-| [build/windows/icon.ico](../../build/windows/icon.ico)         | Windows icon, 16–256 px                                                  |
-| [build/linux/icons/hicolor/](../../build/linux/icons/hicolor/) | Linux icons 16–512 px and SVG; the 256 px PNG is embedded as window icon |
+| File                                                               | Role                                                                                |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| [assets/brand/icon-source.png](../../assets/brand/icon-source.png) | Source artwork of all app icons (see [assets/brand/](../../assets/brand/README.md)) |
+| [build/appicon.png](../../build/appicon.png)                       | 1024×1024 icon, generated (Wails source)                                            |
+| [build/darwin/icons.icns](../../build/darwin/icons.icns)           | macOS icon of the app bundle, generated                                             |
+| [build/windows/icon.ico](../../build/windows/icon.ico)             | Windows icon, 16–256 px, generated                                                  |
+| [build/linux/icons/hicolor/](../../build/linux/icons/hicolor/)     | Linux icons 16–512 px, generated; the 256 px PNG is embedded as window icon         |
 
-To change the icon:
+To change the icon, replace `assets/brand/icon-source.png` (transparent background) and run:
 
 ```bash
-# 1. export build/appicon.svg to build/appicon.png (1024×1024), e.g.
-rsvg-convert -w 1024 -h 1024 build/appicon.svg -o build/appicon.png
-# 2. derive all sizes (needs Pillow)
-python3 scripts/icons.py
-# 3. rebuild
+python3 scripts/icons.py                      # needs Pillow
+python3 scripts/icons.py --preview sheet.png  # optional: small sizes on light and dark backgrounds
 wails3 build
 ```
+
+The script removes the faint alpha haze left from background removal, crops the artwork and centres it on a square canvas before it derives all sizes.
 
 [Index](index.md) · [Deutsch](../de/setup.md)

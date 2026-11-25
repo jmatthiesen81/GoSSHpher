@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-text-dark.png">
+    <img src="assets/brand/logo-text-light.png" alt="GoSSHpher" width="320">
+  </picture>
+</p>
+
 # GoSSHpher
 
 A desktop editor for OpenSSH client configuration files (`~/.ssh/config`). It edits the file without losing formatting, organises hosts in groups and shows for every host which values ssh will actually use, because in ssh the first value found wins.

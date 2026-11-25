@@ -62,7 +62,7 @@ scripts/install-linux.sh --uninstall
 | Was         | Ziel                                                                                                                                                                                                                                                  |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Binary      | `${XDG_BIN_HOME:-~/.local/bin}/gosshpher`                                                                                                                                                                                                             |
-| Icons       | `${XDG_DATA_HOME:-~/.local/share}/icons/hicolor/<größe>/apps/gosshpher.png` und `scalable/apps/gosshpher.svg`                                                                                                                                         |
+| Icons       | `${XDG_DATA_HOME:-~/.local/share}/icons/hicolor/<größe>/apps/gosshpher.png` (Icons einer früheren Installation werden vorher entfernt)                                                                                                                |
 | Menüeintrag | `${XDG_DATA_HOME:-~/.local/share}/applications/de.netinventors.gosshpher.desktop` (aus [build/linux/de.netinventors.gosshpher.desktop](../../build/linux/de.netinventors.gosshpher.desktop), `Exec` auf den absoluten Pfad des Binarys umgeschrieben) |
 
 Das Skript aktualisiert Desktop-Datenbank und Icon-Cache, wenn die Werkzeuge vorhanden sind. Nach jedem neuen Build muss es erneut laufen. Die App setzt `de.netinventors.gosshpher` als GTK-Anwendungs-ID, die auch zum Programmnamen wird (WM-Klasse / Wayland-App-ID); sie entspricht dem Namen der `.desktop`-Datei und deren `StartupWMClass`, sodass der Desktop Fenster, Menüeintrag und Icon zusammenbringt. Binary und Icon behalten den kurzen Namen `gosshpher`.
@@ -107,23 +107,22 @@ Der Workflow signiert `gosshpher.exe` mit SHA-256 und RFC-3161-Zeitstempel und p
 
 ## Icons
 
-| Datei                                                          | Rolle                                                                          |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [build/appicon.svg](../../build/appicon.svg)                   | Vorlage (Terminal-Prompt und Schlüssel auf abgerundetem Quadrat)               |
-| [build/appicon.png](../../build/appicon.png)                   | Export in 1024×1024, Vorlage für alle anderen Größen                           |
-| [build/darwin/icons.icns](../../build/darwin/icons.icns)       | macOS-Icon des App-Bundles                                                     |
-| [build/windows/icon.ico](../../build/windows/icon.ico)         | Windows-Icon, 16–256 px                                                        |
-| [build/linux/icons/hicolor/](../../build/linux/icons/hicolor/) | Linux-Icons 16–512 px und SVG; das 256-px-PNG ist als Fenster-Icon eingebettet |
+| Datei                                                              | Rolle                                                                           |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| [assets/brand/icon-source.png](../../assets/brand/icon-source.png) | Vorlage aller App-Icons (siehe [assets/brand/](../../assets/brand/README.md))   |
+| [build/appicon.png](../../build/appicon.png)                       | Icon in 1024×1024, erzeugt (Vorlage für Wails)                                  |
+| [build/darwin/icons.icns](../../build/darwin/icons.icns)           | macOS-Icon des App-Bundles, erzeugt                                             |
+| [build/windows/icon.ico](../../build/windows/icon.ico)             | Windows-Icon, 16–256 px, erzeugt                                                |
+| [build/linux/icons/hicolor/](../../build/linux/icons/hicolor/)     | Linux-Icons 16–512 px, erzeugt; das 256-px-PNG ist als Fenster-Icon eingebettet |
 
-Icon ändern:
+Icon ändern: `assets/brand/icon-source.png` (transparenter Hintergrund) ersetzen und ausführen:
 
 ```bash
-# 1. build/appicon.svg nach build/appicon.png exportieren (1024×1024), z. B.
-rsvg-convert -w 1024 -h 1024 build/appicon.svg -o build/appicon.png
-# 2. alle Größen ableiten (benötigt Pillow)
-python3 scripts/icons.py
-# 3. neu bauen
+python3 scripts/icons.py                      # benötigt Pillow
+python3 scripts/icons.py --preview sheet.png  # optional: kleine Größen auf hellem und dunklem Hintergrund
 wails3 build
 ```
+
+Das Skript entfernt den schwachen Alpha-Schleier, den die Freistellung hinterlassen hat, schneidet das Motiv zu und zentriert es auf einer quadratischen Fläche, bevor es alle Größen ableitet.
 
 [Index](index.md) · [English](../en/setup.md)

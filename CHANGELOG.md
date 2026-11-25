@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- New app icon and logo (hooded gopher); the README shows the logo in a light and a dark variant.
 - A short loading screen while the app starts, in the colours of the system theme.
 
 ### Fixed
