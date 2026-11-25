@@ -1,6 +1,6 @@
 // Block editor (patterns, group, comment, options) and block operations.
 
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {esc, t, th} from './i18n';
 import {afterStructureChange, groupKey, groupNames, inferGroup, newGroupFor, renameGroup, setBlockGroup} from './groups';
 import {fileName} from './effective';

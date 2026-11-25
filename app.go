@@ -10,9 +10,10 @@ import (
 	"regexp"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"gosshpher/internal/i18n"
 	"gosshpher/internal/sshconfig"
@@ -26,9 +27,13 @@ var backupSuffix = regexp.MustCompile(`^\.bak-\d{8}-\d{6}$`)
 // loaded. The frontend then asks and calls SaveForce.
 var ErrConflict = errors.New("CONFLICT")
 
-// App is bound to the frontend. All exported methods are callable from JS.
+// App is registered as a Wails service. All exported methods are callable
+// from JS through the generated bindings (frontend/bindings).
 type App struct {
-	ctx context.Context
+	app    *application.App
+	window *application.WebviewWindow
+	// discardConfirmed is set once the user chose to quit without saving.
+	discardConfirmed atomic.Bool
 
 	mu       sync.Mutex
 	path     string
@@ -73,52 +78,88 @@ func DefaultConfigPath() string {
 	return filepath.Join(home, ".ssh", "config")
 }
 
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
+// attach connects the app to the Wails application and its main window.
+func (a *App) attach(app *application.App, window *application.WebviewWindow) {
+	a.app, a.window = app, window
+}
+
+// ServiceStartup is called by Wails before the window loads the frontend.
+func (a *App) ServiceStartup(context.Context, application.ServiceOptions) error {
 	if s, err := loadSettings(a.settingsPath); err != nil {
-		runtime.LogErrorf(ctx, "settings %s: %v", a.settingsPath, err)
+		a.logError("settings", a.settingsPath, err)
 		a.settingsErr = err.Error()
 	} else {
 		a.settings = s
 	}
 	if err := a.load(a.path); err != nil {
-		runtime.LogErrorf(ctx, "load %s: %v", a.path, err)
+		a.logError("load", a.path, err)
 		a.cfg = sshconfig.Parse("")
 	}
 	a.updateTitle()
+	return nil
 }
 
-func (a *App) beforeClose(ctx context.Context) bool {
+func (a *App) logError(msg, path string, err error) {
+	if a.app != nil {
+		a.app.Logger.Error(msg, "path", path, "error", err)
+	}
+}
+
+// mustAskBeforeClose reports whether closing the window or quitting would
+// lose unsaved changes the user has not agreed to discard yet.
+func (a *App) mustAskBeforeClose() bool {
+	if a.discardConfirmed.Load() {
+		return false
+	}
 	a.mu.Lock()
-	dirty := a.cfg != nil && a.cfg.String() != a.diskText
+	defer a.mu.Unlock()
+	return a.cfg != nil && a.cfg.String() != a.diskText
+}
+
+// windowClosing is a hook on the window's closing event: with unsaved
+// changes it keeps the window open and asks first.
+func (a *App) windowClosing(e *application.WindowEvent) {
+	if a.mustAskBeforeClose() {
+		e.Cancel()
+		a.askDiscard()
+	}
+}
+
+// shouldQuit is asked when the application is quit (Cmd+Q on macOS, or
+// after the last window closed). It runs on the main thread, so the
+// question is asked asynchronously and the quit is repeated on "discard".
+func (a *App) shouldQuit() bool {
+	if !a.mustAskBeforeClose() {
+		return true
+	}
+	go a.askDiscard()
+	return false
+}
+
+// askDiscard asks whether to quit and discard the unsaved changes. Dialogs
+// in Wails v3 do not return the answer; the buttons carry callbacks. Closing
+// the dialog without a choice keeps the window open.
+func (a *App) askDiscard() {
+	if a.app == nil {
+		return
+	}
+	a.mu.Lock()
 	lang := a.lang()
 	a.mu.Unlock()
-	if !dirty {
-		return false
+	dialog := a.app.Dialog.Question().
+		SetTitle(i18n.T(lang, "dialog.close.title", nil)).
+		SetMessage(i18n.T(lang, "dialog.close.text", nil))
+	if a.window != nil {
+		dialog.AttachToWindow(a.window)
 	}
-	discard := i18n.T(lang, "dialog.close.discard", nil)
-	cancel := i18n.T(lang, "dialog.close.cancel", nil)
-	answer, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
-		Type:    runtime.QuestionDialog,
-		Title:   i18n.T(lang, "dialog.close.title", nil),
-		Message: i18n.T(lang, "dialog.close.text", nil),
-		// Only macOS uses these buttons and returns the label of the chosen
-		// one; without them it shows a single unnamed button and returns "".
-		Buttons:       []string{discard, cancel},
-		DefaultButton: cancel,
-		CancelButton:  cancel,
+	dialog.AddButton(i18n.T(lang, "dialog.close.discard", nil)).OnClick(func() {
+		a.discardConfirmed.Store(true)
+		a.app.Quit()
 	})
-	if err != nil {
-		return false
-	}
-	return !closeConfirmed(answer, discard)
-}
-
-// closeConfirmed reports whether the answer of the close dialog means "quit
-// and discard": Linux and Windows show Yes/No and return "Yes", macOS returns
-// the label of the chosen button.
-func closeConfirmed(answer, discard string) bool {
-	return answer == "Yes" || answer == discard
+	cancel := dialog.AddButton(i18n.T(lang, "dialog.close.cancel", nil))
+	dialog.SetDefaultButton(cancel)
+	dialog.SetCancelButton(cancel)
+	dialog.Show()
 }
 
 // load reads a file; a missing file starts an empty config.
@@ -159,7 +200,7 @@ func (a *App) resolveOptions() sshconfig.ResolveOptions {
 }
 
 func (a *App) updateTitle() {
-	if a.ctx == nil {
+	if a.window == nil {
 		return
 	}
 	a.mu.Lock()
@@ -168,7 +209,7 @@ func (a *App) updateTitle() {
 		title += " •"
 	}
 	a.mu.Unlock()
-	runtime.WindowSetTitle(a.ctx, title)
+	a.window.SetTitle(title)
 }
 
 // GetState returns the current document.
@@ -244,11 +285,12 @@ func (a *App) Open() (State, error) {
 	a.mu.Lock()
 	dir, lang := filepath.Dir(a.path), a.lang()
 	a.mu.Unlock()
-	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title:            i18n.T(lang, "dialog.open.title", nil),
-		DefaultDirectory: dir,
-		ShowHiddenFiles:  true,
-	})
+	path, err := a.app.Dialog.OpenFile().
+		SetTitle(i18n.T(lang, "dialog.open.title", nil)).
+		SetDirectory(dir).
+		ShowHiddenFiles(true).
+		AttachToWindow(a.window).
+		PromptForSingleSelection()
 	if err != nil {
 		return State{}, err
 	}
@@ -278,12 +320,15 @@ func (a *App) SaveAs() (State, error) {
 	a.mu.Lock()
 	dir, name, lang := filepath.Dir(a.path), filepath.Base(a.path), a.lang()
 	a.mu.Unlock()
-	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
-		Title:            i18n.T(lang, "dialog.saveAs.title", nil),
-		DefaultDirectory: dir,
-		DefaultFilename:  name,
-		ShowHiddenFiles:  true,
-	})
+	// the title can only be set through the options
+	path, err := a.app.Dialog.SaveFileWithOptions(&application.SaveFileDialogOptions{
+		Title:                i18n.T(lang, "dialog.saveAs.title", nil),
+		Directory:            dir,
+		Filename:             name,
+		ShowHiddenFiles:      true,
+		CanCreateDirectories: true,
+		Window:               a.window,
+	}).PromptForSingleSelection()
 	if err != nil || path == "" {
 		return a.GetState(), err
 	}

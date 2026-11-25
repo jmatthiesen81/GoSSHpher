@@ -6,25 +6,26 @@ Code-Struktur, Tests und Konventionen für die Arbeit an GoSSHpher.
 
 ```
 .
-├── main.go, app.go, app_test.go   Wails-Einstiegspunkt und gebundene API
+├── main.go, app.go, app_test.go   Wails-Einstiegspunkt und der App-Service
 ├── internal/sshconfig/            Kernbibliothek (ohne Oberfläche, ohne Wails-Abhängigkeit)
 ├── frontend/
 │   ├── index.html                 statisches Layout, Dialoge
 │   ├── src/*.js                   Oberflächenlogik als ES-Module (siehe unten)
 │   ├── src/style.css              Styles, helles/dunkles Theme
-│   ├── wailsjs/                   erzeugte Bindings (eingecheckt)
+│   ├── bindings/                  erzeugte Bindings (eingecheckt)
 │   ├── test/                      Vitest unit tests
 │   ├── vite.config.js             schreibt dist/.gitignore nach jedem Build neu
 │   └── dist/                      Build-Ausgabe (nur ihre .gitignore ist eingecheckt)
-├── build/                         Icons und Plattform-Dateien (bin/ wird ignoriert)
-├── scripts/                       icons.py, install-linux.sh
+├── Taskfile.yml                   Build-Tasks (ausgeführt von wails3 build / wails3 task)
+├── build/                         Icons, Plattform-Dateien, config.yml für wails3 dev (bin/ wird ignoriert)
+├── scripts/                       icons.py, install-linux.sh, set-version.sh, Release-Skripte
 └── config.example                 Beispielkonfiguration
 ```
 
 ## Go
 
 - `internal/sshconfig` ist ein normales Go-Paket und lässt sich ohne Wails nutzen und testen.
-- `app.go` ist die einzige Stelle, die für die bearbeitete Datei auf das Dateisystem zugreift; ein Mutex schützt den Zustand, weil Wails gebundene Methoden nebenläufig aufruft.
+- `app.go` ist die einzige Stelle, die für die bearbeitete Datei auf das Dateisystem zugreift; ein Mutex schützt den Zustand, weil Wails Service-Methoden nebenläufig aufruft.
 - Neue Keywords kommen in das Slice `keywords` in [keywords.go](../../internal/sshconfig/keywords.go): `Name`, `Multi` für kumulative Keywords, optional `Values` für die Wertvorschläge; die Beschreibung kommt in jeden Katalog als `kw.<Name>`. Veraltete Namen gehören in die Alias-Map darunter.
 - Sprache: Code-Kommentare, Ausgaben von Skripten und Metadaten (z. B. die `.desktop`-Datei) sind englisch; Metadaten bekommen deutsche Übersetzungen (`[de]`-Schlüssel). Alle Texte der Oberfläche stammen aus den Übersetzungskatalogen (siehe unten).
 - Formatierung: `gofmt`; `go vet ./...` meldet nichts.
@@ -57,17 +58,17 @@ Code-Struktur, Tests und Konventionen für die Arbeit an GoSSHpher.
 
 ### Bindings
 
-`frontend/wailsjs/go/main/App.js` und `models.ts` werden aus den exportierten Methoden von `App` erzeugt. Nach dem Hinzufügen oder Ändern einer gebundenen Methode:
+`frontend/bindings/gosshpher/app.js` und die Models (JSDoc-Typen) werden aus den exportierten Methoden des `App`-Service erzeugt; das Frontend importiert sie als `import * as Go from '../bindings/gosshpher/app.js'`. Nach dem Hinzufügen oder Ändern einer Service-Methode:
 
 ```bash
-wails generate module
+wails3 generate bindings -clean=true -i
 ```
 
-(`wails build` und `wails dev` erledigen das ebenfalls.)
+(`wails3 build` und `wails3 dev` erledigen das ebenfalls; die CI schlägt fehl, wenn die eingecheckten Bindings veraltet sind.) `-i` sorgt dafür, dass die Methoden einfache JSON-Objekte statt Instanzen von Model-Klassen zurückgeben. Gibt Go einen Fehler zurück, wird das Promise mit einem `RuntimeError` abgelehnt, dessen `message` der Text des Go-Fehlers ist.
 
 ### Oberfläche testen
 
-`wails dev -tags webkit2_41` öffnet das App-Fenster und liefert das Frontend zusätzlich mit funktionierenden Bindings unter <http://localhost:34115> aus, sodass die Entwicklerwerkzeuge des Browsers nutzbar sind.
+`wails3 dev` öffnet das App-Fenster mit dem Frontend aus dem Vite-Dev-Server (Port 9245 oder `WAILS_VITE_PORT`); Änderungen am Frontend werden sofort neu geladen, Änderungen am Go-Code bauen die App neu und starten sie neu.
 
 ## Übersetzungen
 
@@ -115,30 +116,32 @@ cd frontend && npm test && npm run lint
 
 ## CI und Releases
 
-| Workflow                                           | Auslöser                                       | Macht                                                                                                                                                    |
-| -------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ci.yml](../../.github/workflows/ci.yml)           | Push auf jeden Branch, Pull Request            | `go vet`, `go test`, `gofmt`-Prüfung; ESLint und Vitest für das Frontend                                                                                 |
-| [release.yml](../../.github/workflows/release.yml) | Tag `1.2.3` (ohne `v`-Präfix), manueller Start | Tests, dann Builds für Linux (amd64), Windows (amd64) und macOS (universal); bei einem Tag entsteht ein GitHub-Release mit den Archiven und `SHA256SUMS` |
+| Workflow                                           | Auslöser                                       | Macht                                                                                                                                                                   |
+| -------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ci.yml](../../.github/workflows/ci.yml)           | Push auf jeden Branch, Pull Request            | `go vet`, `go test`, `gofmt`-Prüfung, erzeugte Bindings aktuell; ESLint und Vitest für das Frontend                                                                     |
+| [release.yml](../../.github/workflows/release.yml) | Tag `1.2.3` (ohne `v`-Präfix), manueller Start | Tests, dann Builds für Linux (amd64, GTK4 und GTK3), Windows (amd64) und macOS (universal); bei einem Tag entsteht ein GitHub-Release mit den Archiven und `SHA256SUMS` |
+
+Branches: `main` ist der Trunk und enthält immer den aktuellen Stand. Änderungen entstehen in kurzlebigen Branches (`feature/…`, `fix/…`) und kommen per Pull Request nach `main`. Releases sind Tags auf `main`; Versions-Branches gibt es nicht. Braucht eine ältere Version doch einmal einen Fix, entsteht aus ihrem Tag ein Wartungs-Branch (`git switch -c 1.2 1.2.1`), aus dem dann released wird.
 
 Ein Release erstellen:
 
 1. Änderungen während der Arbeit in [CHANGELOG.md](../../CHANGELOG.md) unter `## [Unreleased]` sammeln.
 2. [scripts/release.sh](../../scripts/release.sh) mit sauberem Arbeitsverzeichnis aufrufen. Es macht aus `## [Unreleased]` ein `## [1.2.0] - <heute>`, legt darüber ein neues leeres `## [Unreleased]` an, passt die Vergleichs-Links am Ende an, committet (`chore(release): 1.2.0`) und legt einen annotierten Tag an. Ein von Hand vorbereiteter Abschnitt `## [1.2.0]` wird unverändert verwendet. Vorabversionen (`1.2.0-rc.1`) bekommen nur den Tag. Gepusht wird nichts.
-3. Branch und Tag pushen; der Tag startet den Release-Workflow:
+3. `main` und den Tag pushen; der Tag startet den Release-Workflow:
 
 ```bash
 scripts/release.sh 1.2.0 --dry-run   # optional: CHANGELOG-Diff und Release-Notes anzeigen
 scripts/release.sh 1.2.0
-git push origin 1.2
+git push origin main
 git push origin 1.2.0
 ```
 
-Das Skript lehnt ungültige Versionen (`v1.2.0`), vorhandene Tags, uncommittete Änderungen und einen leeren Abschnitt `[Unreleased]` ab und weist darauf hin, wenn der Branch-Name (`1.1`) nicht zur Version passt. Vor dem Pushen macht `git tag -d 1.2.0` (und `git reset --hard HEAD~1`, falls committet wurde) alles rückgängig.
+Das Skript lehnt ungültige Versionen (`v1.2.0`), vorhandene Tags, uncommittete Änderungen und einen leeren Abschnitt `[Unreleased]` ab und weist darauf hin, wenn es nicht auf `main` läuft. Vor dem Pushen macht `git tag -d 1.2.0` (und `git reset --hard HEAD~1`, falls committet wurde) alles rückgängig.
 
-- Die Version ist der Tag-Name selbst (`1.0.0`, auch Vorabversionen wie `1.0.0-rc.1`, die auf GitHub als Pre-Release markiert werden) und wird nur während des Builds in `wails.json` (`info.productVersion`) geschrieben; manuelle Läufe nutzen `0.0.0` und behalten die Archive als Workflow-Artefakte.
+- Die Version ist der Tag-Name selbst (`1.0.0`, auch Vorabversionen wie `1.0.0-rc.1`, die auf GitHub als Pre-Release markiert werden) und wird nur während des Builds von [scripts/set-version.sh](../../scripts/set-version.sh) in `build/darwin/Info.plist` und die Windows-Ressourcen geschrieben (Windows erhält den numerischen Teil, `1.0.0` für `1.0.0-rc.1`); manuelle Läufe nutzen `0.0.0` und behalten die Archive als Workflow-Artefakte.
 - Die Release-Notes sind der CHANGELOG-Abschnitt der Version ([scripts/changelog-section.sh](../../scripts/changelog-section.sh)), gefolgt von den Notes, die GitHub erzeugt (gemergte Pull Requests, Link *Full Changelog*). Ein Tag ohne eigenen Abschnitt stoppt den Workflow schon im Test-Job, vor den Builds; Vorabversionen greifen auf den Abschnitt der Basisversion (`1.2.0` für `1.2.0-rc.1`) und dann auf `[Unreleased]` zurück. Lokal prüfen mit `scripts/changelog-section.sh 1.2.0`.
-- Die Version der Wails-CLI wird aus `go.mod` gelesen; gebaut wird mit `-trimpath`, damit keine lokalen Pfade in den Binaries landen.
-- Archive: `gosshpher-<version>-linux-amd64.tar.gz` (Binary, Icons, `.desktop`-Datei und `scripts/install-linux.sh` in der Struktur des Repositorys), `…-windows-amd64.zip`, `…-macos-universal.zip` (`.app`), jeweils mit `LICENSE`, `README.md`, `CHANGELOG.md` und `config.example`.
+- Die Wails-CLI (`wails3`) wird in der Version aus `go.mod` installiert; die Jobs führen `wails3 task build:linux`, `build:windows` und `build:darwin:universal` aus der [Taskfile.yml](../../Taskfile.yml) aus, die mit `-trimpath` bauen, damit keine lokalen Pfade in den Binaries landen.
+- Archive: `gosshpher-<version>-linux-amd64.tar.gz` (Binary, Icons, `.desktop`-Datei und `scripts/install-linux.sh` in der Struktur des Repositorys; braucht WebKitGTK 6.0), `…-linux-amd64-gtk3.tar.gz` (dasselbe, mit GTK3 gebaut für Distributionen ohne WebKitGTK 6.0, braucht WebKit2GTK 4.1), `…-windows-amd64.zip`, `…-macos-universal.zip` (`.app`), jeweils mit `LICENSE`, `README.md`, `CHANGELOG.md` und `config.example`.
 - Die Builds sind nicht signiert (siehe [Einrichtung](setup.md#code-signing)).
 
 ## Icons

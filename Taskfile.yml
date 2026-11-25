@@ -1,0 +1,194 @@
+# Build tasks for GoSSHpher (Wails v3). Run them with the Wails CLI, which
+# ships its own task runner:
+#
+#   wails3 build                   build for this OS into build/bin
+#   wails3 dev                     run with live reload (see build/config.yml)
+#   wails3 task build:darwin:universal   macOS universal .app bundle
+#
+# Variables (wails3 build VAR=value, or wails3 task <task> VAR=value):
+#   VERSION     release version, enables the update check (default "dev")
+#   EXTRA_TAGS  additional Go build tags, e.g. EXTRA_TAGS=gtk3 to build
+#               against GTK3/WebKit2GTK 4.1 instead of GTK4/WebKitGTK 6.0
+#   DEV=true    development build: no production tag, no stripping
+version: '3'
+
+vars:
+  APP_NAME: gosshpher
+  # name of the macOS app bundle
+  PRODUCT_NAME: GoSSHpher
+  BIN_DIR: build/bin
+  VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+
+tasks:
+  default:
+    cmds:
+      - task: build
+
+  build:
+    summary: Builds the application for the current OS
+    cmds:
+      - task: 'build:{{OS}}'
+
+  run:
+    summary: Runs the built application (used by wails3 dev)
+    cmds:
+      - cmd: '"{{.BIN_DIR}}/{{.PRODUCT_NAME}}.app/Contents/MacOS/{{.APP_NAME}}"'
+        platforms: [darwin]
+      - cmd: '"{{.BIN_DIR}}/{{.APP_NAME}}.exe"'
+        platforms: [windows]
+      - cmd: '"{{.BIN_DIR}}/{{.APP_NAME}}"'
+        platforms: [linux]
+
+  dev:
+    summary: Runs the application in development mode
+    cmds:
+      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
+
+  # --- frontend -----------------------------------------------------------
+
+  install:frontend:deps:
+    summary: Installs the frontend dependencies
+    run: once
+    dir: frontend
+    sources:
+      - package.json
+      - package-lock.json
+    generates:
+      - node_modules/.package-lock.json
+    cmds:
+      - npm install
+
+  generate:bindings:
+    summary: Generates the JS bindings of the Go service into frontend/bindings
+    run: once
+    sources:
+      - "*.go"
+      - internal/**/*.go
+      - go.mod
+      - go.sum
+    generates:
+      - frontend/bindings/**/*
+    cmds:
+      # -i: plain JSON objects instead of model classes, like Wails v2
+      - wails3 generate bindings -clean=true -i
+
+  build:frontend:
+    summary: Builds the frontend into frontend/dist
+    run: once
+    dir: frontend
+    deps:
+      - install:frontend:deps
+      - generate:bindings
+    cmds:
+      - npm run build
+
+  dev:frontend:
+    summary: Runs the Vite dev server (used by wails3 dev)
+    dir: frontend
+    deps:
+      - install:frontend:deps
+    cmds:
+      - npm run dev -- --port {{.VITE_PORT}} --strictPort
+
+  # --- Go build -------------------------------------------------------------
+
+  go:build:
+    internal: true
+    deps:
+      - build:frontend
+    vars:
+      TAGS: '{{if eq .DEV "true"}}{{.EXTRA_TAGS}}{{else}}production{{if .EXTRA_TAGS}},{{.EXTRA_TAGS}}{{end}}{{end}}'
+      # main.version enables the update check (see update.go)
+      LDFLAGS: '-X main.version={{.VERSION | default "dev"}}{{if ne .DEV "true"}} -w -s{{if eq .GOOS "windows"}} -H windowsgui{{end}}{{end}}'
+      GCFLAGS: '{{if eq .DEV "true"}}-gcflags=all="-l"{{else}}-trimpath{{end}}'
+    cmds:
+      - go build {{if .TAGS}}-tags {{.TAGS}}{{end}} -buildvcs=false {{.GCFLAGS}} -ldflags="{{.LDFLAGS}}" -o "{{.OUTPUT}}"
+    env:
+      GOOS: '{{.GOOS}}'
+      GOARCH: '{{.ARCH | default ARCH}}'
+      CGO_ENABLED: '{{.CGO_ENABLED | default "1"}}'
+
+  build:linux:
+    summary: Builds build/bin/gosshpher
+    cmds:
+      - task: go:build
+        vars:
+          GOOS: linux
+          OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
+          DEV: '{{.DEV}}'
+          VERSION: '{{.VERSION}}'
+          EXTRA_TAGS: '{{.EXTRA_TAGS}}'
+
+  build:windows:
+    summary: Builds build/bin/gosshpher.exe with icon, manifest and version info
+    vars:
+      ARCH: '{{.ARCH | default ARCH}}'
+    cmds:
+      - wails3 generate syso -arch {{.ARCH}} -icon build/windows/icon.ico -manifest build/windows/wails.exe.manifest -info build/windows/info.json -out wails_windows_{{.ARCH}}.syso
+      - defer: '{{if eq OS "windows"}}powershell Remove-Item -ErrorAction Ignore wails_windows_*.syso{{else}}rm -f wails_windows_*.syso{{end}}'
+      - task: go:build
+        vars:
+          GOOS: windows
+          ARCH: '{{.ARCH}}'
+          # the Windows backend needs no cgo
+          CGO_ENABLED: '0'
+          OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}.exe'
+          DEV: '{{.DEV}}'
+          VERSION: '{{.VERSION}}'
+          EXTRA_TAGS: '{{.EXTRA_TAGS}}'
+
+  darwin:binary:
+    internal: true
+    cmds:
+      - task: go:build
+        vars:
+          GOOS: darwin
+          ARCH: '{{.ARCH}}'
+          OUTPUT: '{{.OUTPUT}}'
+          DEV: '{{.DEV}}'
+          VERSION: '{{.VERSION}}'
+          EXTRA_TAGS: '{{.EXTRA_TAGS}}'
+    env:
+      CGO_CFLAGS: -mmacosx-version-min=12.0
+      CGO_LDFLAGS: -mmacosx-version-min=12.0
+      MACOSX_DEPLOYMENT_TARGET: "12.0"
+
+  build:darwin:
+    summary: Builds build/bin/GoSSHpher.app for the current architecture
+    cmds:
+      - task: darwin:binary
+        vars:
+          ARCH: '{{.ARCH | default ARCH}}'
+          OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
+          DEV: '{{.DEV}}'
+          VERSION: '{{.VERSION}}'
+          EXTRA_TAGS: '{{.EXTRA_TAGS}}'
+      - task: darwin:bundle
+
+  build:darwin:universal:
+    summary: Builds build/bin/GoSSHpher.app as universal binary (arm64 + amd64)
+    cmds:
+      - for: [amd64, arm64]
+        task: darwin:binary
+        vars:
+          ARCH: '{{.ITEM}}'
+          OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}-{{.ITEM}}'
+          DEV: '{{.DEV}}'
+          VERSION: '{{.VERSION}}'
+          EXTRA_TAGS: '{{.EXTRA_TAGS}}'
+      - lipo -create -output "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
+      - rm "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
+      - task: darwin:bundle
+
+  darwin:bundle:
+    internal: true
+    vars:
+      APP: '{{.BIN_DIR}}/{{.PRODUCT_NAME}}.app'
+    cmds:
+      - rm -rf "{{.APP}}"
+      - mkdir -p "{{.APP}}/Contents/MacOS" "{{.APP}}/Contents/Resources"
+      - cp build/darwin/Info.plist "{{.APP}}/Contents/"
+      - cp build/darwin/icons.icns "{{.APP}}/Contents/Resources/"
+      - mv "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.APP}}/Contents/MacOS/"
+      # ad-hoc signature, replaced by the Developer ID signature in the release
+      - codesign --force --sign - "{{.APP}}"

@@ -1,6 +1,8 @@
 /build/bin/
-/frontend/package.json.md5
 /**/node_modules/
 /config.*
 !/config.example
 !/config.example.d/
+# task runner state (wails3 task) and Windows resources generated during a build
+/.task/
+/wails_windows_*.syso

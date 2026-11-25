@@ -1,7 +1,7 @@
 // Template dialogs: the template manager (create, edit, delete) and the dialog
 // that applies a template to a host or creates a group from a template.
 
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {esc, t, th} from './i18n';
 import {afterStructureChange, groupKey, groupNameError} from './groups';
 import {renderEditor} from './editor';

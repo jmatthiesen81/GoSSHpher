@@ -39,11 +39,10 @@ git rev-parse --git-dir >/dev/null 2>&1 || die "not a git repository"
 [ -z "$(git status --porcelain)" ] || die "the working tree has uncommitted changes; commit or stash them first"
 ! git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null || die "tag $VERSION already exists"
 
+# releases are tagged on main; a maintenance branch (e.g. 1.2, created from a
+# tag for a backport) is allowed, but worth a note
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-MINOR=$(echo "$VERSION" | sed -E 's/^([0-9]+\.[0-9]+).*/\1/')
-case $BRANCH in
-    [0-9]*.[0-9]*) [ "$BRANCH" = "$MINOR" ] || echo "release: note: releasing $VERSION from branch $BRANCH" >&2 ;;
-esac
+[ "$BRANCH" = main ] || echo "release: note: releasing $VERSION from branch $BRANCH, not main" >&2
 
 has_section() { grep -Eq "^## \[$(echo "$1" | sed 's/[.]/\\./g')\]" "$CHANGELOG"; }
 

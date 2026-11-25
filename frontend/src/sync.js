@@ -1,6 +1,6 @@
 // Synchronisation with the Go backend and rendering of the status line.
 
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {t} from './i18n';
 import {renderEditor, renderIssueSlots} from './editor';
 import {renderEffective, renderIssues} from './inspector';

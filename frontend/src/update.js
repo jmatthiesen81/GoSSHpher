@@ -1,7 +1,7 @@
 // Update notice: asks the backend for a newer GitHub release after start-up.
 
-import * as Go from '../wailsjs/go/main/App';
-import {BrowserOpenURL} from '../wailsjs/runtime/runtime';
+import * as Go from '../bindings/gosshpher/app.js';
+import {Browser} from '@wailsio/runtime';
 import {t} from './i18n';
 import {$, store} from './state';
 
@@ -31,7 +31,7 @@ export function renderUpdateNotice() {
 
 export function setupUpdateNotice() {
     $('update-open').addEventListener('click', () => {
-        if (current?.url) BrowserOpenURL(current.url);
+        if (current?.url) Browser.OpenURL(current.url);
     });
     $('update-dismiss').addEventListener('click', () => {
         $('update-note').hidden = true;

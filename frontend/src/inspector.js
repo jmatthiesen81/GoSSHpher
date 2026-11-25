@@ -1,6 +1,6 @@
 // Inspector: hints panel and effective configuration.
 
-import * as Go from '../wailsjs/go/main/App';
+import * as Go from '../bindings/gosshpher/app.js';
 import {esc, t, th} from './i18n';
 import {focusEntry, select} from './editor';
 import {$, blockIndex, blockTitle, isWildcard, S, selectedBlock, splitPatterns} from './state';

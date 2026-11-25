@@ -7,8 +7,8 @@ A desktop editor for OpenSSH client configuration files (`~/.ssh/config`). It ed
 |              |                                                                                                                                                               |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Language     | Go 1.26 (core and backend), vanilla JavaScript (UI)                                                                                                           |
-| Framework    | [Wails v2.17](https://wails.io) with the system WebView, Vite 7 for the frontend                                                                              |
-| Platforms    | Linux (WebKitGTK 4.1), macOS, Windows (WebView2)                                                                                                              |
+| Framework    | [Wails v3.1](https://v3.wails.io) with the system WebView, Vite 7 for the frontend                                                                            |
+| Platforms    | Linux (GTK4 / WebKitGTK 6.0), macOS 12+, Windows (WebView2)                                                                                                   |
 | Key features | Lossless editing, effective configuration like `ssh -G`, shadowed-option checks, groups as comment markers, host and group templates, safe saving with backup |
 | UI language  | English (default), German; switchable in the settings                                                                                                         |
 | App id       | `de.netinventors.gosshpher` (macOS bundle id, settings folder, Linux app id)                                                                                  |
@@ -19,10 +19,10 @@ A desktop editor for OpenSSH client configuration files (`~/.ssh/config`). It ed
 
 ```bash
 # Linux (Ubuntu 24.04+): system packages and Wails CLI
-sudo apt install build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.1
+sudo apt install build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev
+go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
 
-wails build -tags webkit2_41
+wails3 build
 build/bin/gosshpher ./config.example   # try it with the sample file
 build/bin/gosshpher                    # edit ~/.ssh/config
 
@@ -37,10 +37,11 @@ macOS and Windows: see [Setup](docs/en/setup.md).
 
 | Path                  | Content                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------ |
-| `main.go`, `app.go`   | Wails entry point and the API bound to the frontend (load, save, resolve)            |
+| `main.go`, `app.go`   | Wails entry point and the App service called by the frontend (load, save, resolve)   |
 | `internal/sshconfig/` | Core library: parser, writer, evaluation, checks, groups                             |
 | `frontend/`           | User interface (`index.html`, `src/main.js`, `src/style.css`) and generated bindings |
-| `build/`              | Icons and platform files (macOS, Windows, Linux `.desktop`)                          |
+| `Taskfile.yml`        | Build tasks for `wails3 build` / `wails3 task`                                       |
+| `build/`              | Icons and platform files (macOS, Windows, Linux `.desktop`), `config.yml` for dev    |
 | `scripts/`            | `icons.py` (derive icon sizes), `install-linux.sh` (install for the current user)    |
 | `config.example`      | Sample configuration with fictitious hosts                                           |
 | `config.example.d/`   | File included by the sample (demonstrates `Include`)                                 |

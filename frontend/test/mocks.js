@@ -1,7 +1,7 @@
 // Module mocks shared by the tests: no Go backend, no DOM rendering.
 import {vi} from 'vitest';
 
-vi.mock('../wailsjs/go/main/App', () => ({}));
+vi.mock('../bindings/gosshpher/app.js', () => ({}));
 vi.mock('../src/sidebar', () => ({renderSidebar: vi.fn(), sortKey: vi.fn()}));
 vi.mock('../src/inspector', () => ({renderEffective: vi.fn(), renderIssues: vi.fn(), inspectorTab: vi.fn()}));
 vi.mock('../src/sync', () => ({

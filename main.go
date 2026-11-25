@@ -4,12 +4,9 @@ import (
 	"embed"
 	"log"
 	"os"
-	"runtime"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/options/linux"
+	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 //go:embed all:frontend/dist
@@ -20,10 +17,6 @@ var assets embed.FS
 //go:embed build/linux/icons/hicolor/256x256/apps/gosshpher.png
 var icon []byte
 
-// maxWindowSize is the largest window size on Linux (X11 sizes are 16-bit
-// signed; leave headroom for the decorations Wails adds on Wayland).
-const maxWindowSize = 30000
-
 func main() {
 	path := DefaultConfigPath()
 	if len(os.Args) > 1 && os.Args[1] != "" && os.Args[1][0] != '-' {
@@ -31,38 +24,47 @@ func main() {
 	}
 	app := NewApp(path)
 
-	// Wails on Linux turns a MaxWidth/MaxHeight of 0 into the size of the
-	// monitor the window opens on, so with several monitors the window could
-	// never grow beyond the narrowest one. A large explicit limit lifts that.
-	// Windows and macOS treat 0 as "no limit" and need nothing.
-	maxWidth, maxHeight := 0, 0
-	if runtime.GOOS == "linux" {
-		maxWidth, maxHeight = maxWindowSize, maxWindowSize
-	}
-
-	err := wails.Run(&options.App{
-		Title:     "GoSSHpher",
-		Width:     1400,
-		Height:    900,
-		MinWidth:  900,
-		MinHeight: 600,
-		MaxWidth:  maxWidth,
-		MaxHeight: maxHeight,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
+	wapp := application.New(application.Options{
+		Name:        "GoSSHpher",
+		Description: "Grafischer Editor für SSH-Client-Konfigurationen",
+		Services: []application.Service{
+			application.NewService(app),
 		},
-		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 1},
-		OnStartup:        app.startup,
-		OnBeforeClose:    app.beforeClose,
-		Bind:             []interface{}{app},
-		Linux: &linux.Options{
-			Icon: icon,
-			// WM class / Wayland app id; must match the name of the .desktop
-			// file (de.netinventors.gosshpher.desktop) and its StartupWMClass
-			ProgramName: AppID,
+		Assets: application.AssetOptions{
+			Handler: application.AssetFileServerFS(assets),
+		},
+		// Quitting via the menu or Cmd+Q (macOS) goes through the same
+		// "discard unsaved changes?" question as closing the window.
+		ShouldQuit: app.shouldQuit,
+		Mac: application.MacOptions{
+			ApplicationShouldTerminateAfterLastWindowClosed: true,
+		},
+		Linux: application.LinuxOptions{
+			// GTK application id, WM class and Wayland app id (ProgramName
+			// defaults to it); must match the name of the .desktop file
+			// (de.netinventors.gosshpher.desktop) and its StartupWMClass
+			ApplicationID: AppID,
 		},
 	})
-	if err != nil {
+
+	// A MaxWidth/MaxHeight of 0 means "no limit" on every platform in Wails
+	// v3, so the window can grow across several monitors.
+	window := wapp.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:            "GoSSHpher",
+		Width:            1400,
+		Height:           900,
+		MinWidth:         900,
+		MinHeight:        600,
+		BackgroundColour: application.NewRGB(255, 255, 255),
+		URL:              "/",
+		Linux: application.LinuxWindow{
+			Icon: icon,
+		},
+	})
+	window.RegisterHook(events.Common.WindowClosing, app.windowClosing)
+	app.attach(wapp, window)
+
+	if err := wapp.Run(); err != nil {
 		log.Fatal(err)
 	}
 }

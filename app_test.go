@@ -184,19 +184,23 @@ func TestSaveWithoutBackup(t *testing.T) {
 	}
 }
 
-func TestCloseConfirmed(t *testing.T) {
-	for _, c := range []struct {
-		answer string
-		want   bool
-	}{
-		{"Yes", true},              // Linux, Windows
-		{"Discard and quit", true}, // macOS: label of the chosen button
-		{"No", false},              // Linux, Windows
-		{"Cancel", false},          // macOS
-		{"", false},                // dialog closed without a choice
-	} {
-		if got := closeConfirmed(c.answer, "Discard and quit"); got != c.want {
-			t.Errorf("%q: got %v", c.answer, got)
-		}
+func TestMustAskBeforeClose(t *testing.T) {
+	a := NewApp(filepath.Join(t.TempDir(), "config"))
+	if err := a.load(a.path); err != nil {
+		t.Fatal(err)
+	}
+	if a.mustAskBeforeClose() {
+		t.Error("unchanged document: must not ask")
+	}
+	a.ParseText("Host a\n")
+	if !a.mustAskBeforeClose() {
+		t.Error("unsaved changes: must ask")
+	}
+	if a.shouldQuit() {
+		t.Error("unsaved changes: quit must wait for the answer")
+	}
+	a.discardConfirmed.Store(true)
+	if a.mustAskBeforeClose() || !a.shouldQuit() {
+		t.Error("discard confirmed: must close without asking")
 	}
 }

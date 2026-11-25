@@ -65,7 +65,7 @@ The frontend holds the document being edited and sends it to Go after every chan
 ## Context
 
 - Module name `gosshpher` ([go.mod](../../go.mod)); the repository has no remote configured.
-- Licensed under the [Mozilla Public License 2.0](../../LICENSE). Author information is set in [wails.json](../../wails.json).
+- Licensed under the [Mozilla Public License 2.0](../../LICENSE).
 - [config.example](../../config.example) contains fictitious hosts for trying the app. `config.template` and backups (`config.*`) are excluded by [.gitignore](../../.gitignore) because they may contain real server data.
 
 [Index](index.md) · [Deutsch](../de/overview.md)
