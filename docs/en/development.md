@@ -116,25 +116,27 @@ cd frontend && npm test && npm run lint
 
 ## CI and releases
 
-| Workflow                                           | Trigger                                 | Does                                                                                                                                             |
-| -------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [ci.yml](../../.github/workflows/ci.yml)           | Push to any branch, pull request        | `go vet`, `go test`, `gofmt` check, generated bindings up to date; ESLint and Vitest for the frontend                                            |
-| [release.yml](../../.github/workflows/release.yml) | Tag `1.2.3` (no `v` prefix), manual run | Tests, then builds Linux (amd64), Windows (amd64) and macOS (universal); on a tag it creates a GitHub release with the archives and `SHA256SUMS` |
+| Workflow                                           | Trigger                                 | Does                                                                                                                                                            |
+| -------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ci.yml](../../.github/workflows/ci.yml)           | Push to any branch, pull request        | `go vet`, `go test`, `gofmt` check, generated bindings up to date; ESLint and Vitest for the frontend                                                           |
+| [release.yml](../../.github/workflows/release.yml) | Tag `1.2.3` (no `v` prefix), manual run | Tests, then builds Linux (amd64, GTK4 and GTK3), Windows (amd64) and macOS (universal); on a tag it creates a GitHub release with the archives and `SHA256SUMS` |
+
+Branches: `main` is the trunk and always holds the current state. Changes are made in short-lived branches (`feature/…`, `fix/…`) and merged into `main` with a pull request. Releases are tags on `main`; there are no version branches. If an older version ever needs a fix, a maintenance branch is created from its tag (`git switch -c 1.2 1.2.1`) and released from there.
 
 Release steps:
 
 1. Collect the changes under `## [Unreleased]` in [CHANGELOG.md](../../CHANGELOG.md) while working.
 2. Run [scripts/release.sh](../../scripts/release.sh) on a clean working tree. It turns `## [Unreleased]` into `## [1.2.0] - <today>`, adds a new empty `## [Unreleased]` above it, updates the compare links at the end, commits (`chore(release): 1.2.0`) and creates an annotated tag. A section `## [1.2.0]` prepared by hand is used as it is. Pre-releases (`1.2.0-rc.1`) only get the tag. Nothing is pushed.
-3. Push the branch and the tag; the tag starts the release workflow:
+3. Push `main` and the tag; the tag starts the release workflow:
 
 ```bash
 scripts/release.sh 1.2.0 --dry-run   # optional: show the CHANGELOG diff and the release notes
 scripts/release.sh 1.2.0
-git push origin 1.2
+git push origin main
 git push origin 1.2.0
 ```
 
-The script refuses invalid versions (`v1.2.0`), existing tags, uncommitted changes and an empty `[Unreleased]` section, and notes when the branch name (`1.1`) does not match the version. Before pushing, `git tag -d 1.2.0` (and `git reset --hard HEAD~1` if it committed) undoes it.
+The script refuses invalid versions (`v1.2.0`), existing tags, uncommitted changes and an empty `[Unreleased]` section, and notes when it does not run on `main`. Before pushing, `git tag -d 1.2.0` (and `git reset --hard HEAD~1` if it committed) undoes it.
 
 - The version is the tag name itself (`1.0.0`, pre-releases like `1.0.0-rc.1` also work and are marked as pre-release on GitHub) and written into `build/darwin/Info.plist` and the Windows resources by [scripts/set-version.sh](../../scripts/set-version.sh) during the build only (Windows gets the numeric part, `1.0.0` for `1.0.0-rc.1`); manual runs use `0.0.0` and keep the archives as workflow artifacts.
 - The release notes are the CHANGELOG section of the version ([scripts/changelog-section.sh](../../scripts/changelog-section.sh)), followed by the notes GitHub generates (merged pull requests, *Full Changelog* link). A tag without its own section stops the workflow in the test job, before the builds; pre-releases fall back to the section of the base version (`1.2.0` for `1.2.0-rc.1`) and then to `[Unreleased]`. Check locally with `scripts/changelog-section.sh 1.2.0`.

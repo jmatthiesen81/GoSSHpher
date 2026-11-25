@@ -116,25 +116,27 @@ cd frontend && npm test && npm run lint
 
 ## CI und Releases
 
-| Workflow                                           | Auslöser                                       | Macht                                                                                                                                                    |
-| -------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ci.yml](../../.github/workflows/ci.yml)           | Push auf jeden Branch, Pull Request            | `go vet`, `go test`, `gofmt`-Prüfung, erzeugte Bindings aktuell; ESLint und Vitest für das Frontend                                                      |
-| [release.yml](../../.github/workflows/release.yml) | Tag `1.2.3` (ohne `v`-Präfix), manueller Start | Tests, dann Builds für Linux (amd64), Windows (amd64) und macOS (universal); bei einem Tag entsteht ein GitHub-Release mit den Archiven und `SHA256SUMS` |
+| Workflow                                           | Auslöser                                       | Macht                                                                                                                                                                   |
+| -------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ci.yml](../../.github/workflows/ci.yml)           | Push auf jeden Branch, Pull Request            | `go vet`, `go test`, `gofmt`-Prüfung, erzeugte Bindings aktuell; ESLint und Vitest für das Frontend                                                                     |
+| [release.yml](../../.github/workflows/release.yml) | Tag `1.2.3` (ohne `v`-Präfix), manueller Start | Tests, dann Builds für Linux (amd64, GTK4 und GTK3), Windows (amd64) und macOS (universal); bei einem Tag entsteht ein GitHub-Release mit den Archiven und `SHA256SUMS` |
+
+Branches: `main` ist der Trunk und enthält immer den aktuellen Stand. Änderungen entstehen in kurzlebigen Branches (`feature/…`, `fix/…`) und kommen per Pull Request nach `main`. Releases sind Tags auf `main`; Versions-Branches gibt es nicht. Braucht eine ältere Version doch einmal einen Fix, entsteht aus ihrem Tag ein Wartungs-Branch (`git switch -c 1.2 1.2.1`), aus dem dann released wird.
 
 Ein Release erstellen:
 
 1. Änderungen während der Arbeit in [CHANGELOG.md](../../CHANGELOG.md) unter `## [Unreleased]` sammeln.
 2. [scripts/release.sh](../../scripts/release.sh) mit sauberem Arbeitsverzeichnis aufrufen. Es macht aus `## [Unreleased]` ein `## [1.2.0] - <heute>`, legt darüber ein neues leeres `## [Unreleased]` an, passt die Vergleichs-Links am Ende an, committet (`chore(release): 1.2.0`) und legt einen annotierten Tag an. Ein von Hand vorbereiteter Abschnitt `## [1.2.0]` wird unverändert verwendet. Vorabversionen (`1.2.0-rc.1`) bekommen nur den Tag. Gepusht wird nichts.
-3. Branch und Tag pushen; der Tag startet den Release-Workflow:
+3. `main` und den Tag pushen; der Tag startet den Release-Workflow:
 
 ```bash
 scripts/release.sh 1.2.0 --dry-run   # optional: CHANGELOG-Diff und Release-Notes anzeigen
 scripts/release.sh 1.2.0
-git push origin 1.2
+git push origin main
 git push origin 1.2.0
 ```
 
-Das Skript lehnt ungültige Versionen (`v1.2.0`), vorhandene Tags, uncommittete Änderungen und einen leeren Abschnitt `[Unreleased]` ab und weist darauf hin, wenn der Branch-Name (`1.1`) nicht zur Version passt. Vor dem Pushen macht `git tag -d 1.2.0` (und `git reset --hard HEAD~1`, falls committet wurde) alles rückgängig.
+Das Skript lehnt ungültige Versionen (`v1.2.0`), vorhandene Tags, uncommittete Änderungen und einen leeren Abschnitt `[Unreleased]` ab und weist darauf hin, wenn es nicht auf `main` läuft. Vor dem Pushen macht `git tag -d 1.2.0` (und `git reset --hard HEAD~1`, falls committet wurde) alles rückgängig.
 
 - Die Version ist der Tag-Name selbst (`1.0.0`, auch Vorabversionen wie `1.0.0-rc.1`, die auf GitHub als Pre-Release markiert werden) und wird nur während des Builds von [scripts/set-version.sh](../../scripts/set-version.sh) in `build/darwin/Info.plist` und die Windows-Ressourcen geschrieben (Windows erhält den numerischen Teil, `1.0.0` für `1.0.0-rc.1`); manuelle Läufe nutzen `0.0.0` und behalten die Archive als Workflow-Artefakte.
 - Die Release-Notes sind der CHANGELOG-Abschnitt der Version ([scripts/changelog-section.sh](../../scripts/changelog-section.sh)), gefolgt von den Notes, die GitHub erzeugt (gemergte Pull Requests, Link *Full Changelog*). Ein Tag ohne eigenen Abschnitt stoppt den Workflow schon im Test-Job, vor den Builds; Vorabversionen greifen auf den Abschnitt der Basisversion (`1.2.0` für `1.2.0-rc.1`) und dann auf `[Unreleased]` zurück. Lokal prüfen mit `scripts/changelog-section.sh 1.2.0`.
