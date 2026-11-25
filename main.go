@@ -51,11 +51,11 @@ func main() {
 	// A MaxWidth/MaxHeight of 0 means "no limit" on every platform in Wails
 	// v3, so the window can grow across several monitors.
 	window := wapp.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            "GoSSHpher",
-		Width:            1400,
-		Height:           900,
-		MinWidth:         900,
-		MinHeight:        600,
+		Title:     "GoSSHpher",
+		Width:     1400,
+		Height:    900,
+		MinWidth:  900,
+		MinHeight: 600,
 		// replaced in ServiceStartup by the colour of the system theme
 		BackgroundColour: backgroundLight,
 		URL:              "/",
