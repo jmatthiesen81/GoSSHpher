@@ -23,7 +23,7 @@ Was GoSSHpher bewusst nicht tut, wo die Auswertung an Grenzen stößt und welche
 ## Wartung
 
 - Die Wails-CLI (`wails3`) sollte in der Version aus `go.mod` (v3.1.0) installiert sein, um Unterschiede in den erzeugten Bindings zu vermeiden.
-- Linux-Builds nutzen GTK4 / WebKitGTK 6.0 (Standard von Wails v3); Distributionen ohne WebKitGTK 6.0 brauchen einen Build mit `EXTRA_TAGS=gtk3` (GTK3 / WebKit2GTK 4.1).
+- Linux-Builds nutzen GTK4 / WebKitGTK 6.0 (Standard von Wails v3); für Distributionen ohne WebKitGTK 6.0 enthalten die Releases zusätzlich einen GTK3-Build (`…-linux-amd64-gtk3.tar.gz`, WebKit2GTK 4.1; lokal `wails3 build EXTRA_TAGS=gtk3`).
 - Keine TODO- oder FIXME-Markierungen im Code.
 
 ## Designentscheidungen
