@@ -4,12 +4,12 @@ A guide to the GoSSHpher window: editing blocks, groups, the effective configura
 
 ## Window layout
 
-| Area             | Content                                                                                                                                 |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Toolbar          | Open, *Save* with a ▾ menu for *Save as…*, ↶ ↷ (undo/redo), ↻ (reload), file path, unsaved marker, tabs *Editor* / *Text*, ⚙ (settings) |
-| Left: host list  | All blocks with position number, aliases, `user@hostname:port`; filter, sorting, groups; buttons *+ Host*, *+ Match*, *+ Group*         |
-| Middle: editor   | The selected block: patterns, group, comment, options                                                                                   |
-| Right: inspector | Tab *Effective* (effective configuration) and tab *Hints*                                                                               |
+| Area             | Content                                                                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Toolbar          | Logo and name, Open, *Save* with a ▾ menu for *Save as…*, ↶ ↷ (undo/redo), ↻ (reload), file path, unsaved marker, tabs *Editor* / *Text*, ⚙ (settings), ⓘ (info card) |
+| Left: host list  | All blocks with position number, aliases, `user@hostname:port`; filter, sorting, groups; buttons *+ Host*, *+ Match*, *+ Group*                                       |
+| Middle: editor   | The selected block: patterns, group, comment, options                                                                                                                 |
+| Right: inspector | Tab *Effective* (effective configuration) and tab *Hints*                                                                                                             |
 
 The pane borders and the *Option* column can be dragged; a double click resets the width. Widths, sorting and collapsed groups are stored in the [settings file](architecture.md#settings-file).
 
@@ -142,6 +142,10 @@ The dialog also shows where the settings file is stored. Details: [Architecture 
 ## Update notice
 
 At start GoSSHpher asks GitHub (`api.github.com`) in the background for the latest release. If there is a newer one, a notice appears in the bottom right corner with *View release* (opens the release page in the browser) and *Dismiss* (hides the notice until the next release). The check never blocks the application; without network it gives up silently after 5 seconds at the latest. Development builds (`dev`, `0.0.0`) do not check; the check can be switched off in the settings.
+
+## Info card
+
+ⓘ next to the settings opens a card with version, update state, publisher, website, source code, documentation, license, changelog and build details (platform, Go and Wails version). Links open in the browser. The card shows the result of the update check and offers *Check again*; if the check at start failed or was switched off at that time, opening the card checks once more (unless the setting is off). A dot on ⓘ marks a newer release that was not dismissed. `Esc`, × or a click outside closes the card.
 
 ## Undo and redo
 

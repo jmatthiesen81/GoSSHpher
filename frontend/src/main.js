@@ -15,6 +15,7 @@ import {applyState, matchesFilter, renderAll, showError} from './sync';
 import {setupDatalists, toast} from './ui';
 import {redo, resetHistory, undo} from './history';
 import {checkForUpdate, setupUpdateNotice} from './update';
+import {setupAbout} from './about';
 import {hideSplash, setupTheme} from './theme';
 
 // ---------------------------------------------------------------- init ---
@@ -52,6 +53,7 @@ async function init() {
     resetHistory();
     renderAll();
     setupUpdateNotice();
+    setupAbout();
     checkForUpdate(); // not awaited: must never delay or block the start
 
     $('btn-save').addEventListener('click', () => doSave(false));

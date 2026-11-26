@@ -35,9 +35,11 @@ export function th(key, params = {}) {
 //   data-i18n-html="key"        → innerHTML (key must end in _html)
 //   data-i18n-placeholder="key" → placeholder
 //   data-i18n-title="key"       → title
+//   data-i18n-aria-label="key"  → aria-label
 export function applyStatic(root = document) {
     root.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t(el.dataset.i18n)));
     root.querySelectorAll('[data-i18n-html]').forEach((el) => (el.innerHTML = th(el.dataset.i18nHtml)));
     root.querySelectorAll('[data-i18n-placeholder]').forEach((el) => (el.placeholder = t(el.dataset.i18nPlaceholder)));
     root.querySelectorAll('[data-i18n-title]').forEach((el) => (el.title = t(el.dataset.i18nTitle)));
+    root.querySelectorAll('[data-i18n-aria-label]').forEach((el) => el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)));
 }

@@ -10,6 +10,7 @@ square 1024x1024 canvas with a small margin and write
   build/windows/icon.ico                              (16-256)
   build/darwin/icons.icns                             (macOS app bundle)
   build/linux/icons/hicolor/<n>x<n>/apps/gosshpher.png
+  frontend/public/logo.png                            (128, toolbar and info card)
 --preview writes a contact sheet (raw vs. cleaned, small sizes on Breeze light
 and dark) instead. Requires Pillow.
 """
@@ -22,6 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "assets" / "brand" / "icon-source.png"
 LINUX_SIZES = [16, 22, 24, 32, 48, 64, 128, 256, 512]
 ICO_SIZES = [16, 24, 32, 48, 64, 128, 256]
+LOGO_SIZE = 128     # frontend/public/logo.png
 ALPHA_FLOOR = 48     # alpha below this is haze, not artwork
 MARGIN = 0.04        # free border per side of the square canvas
 
@@ -92,6 +94,12 @@ def main() -> None:
         out.parent.mkdir(parents=True, exist_ok=True)
         icon.resize((s, s), Image.LANCZOS).save(out, optimize=True)
         print("wrote", out.relative_to(ROOT))
+
+    # toolbar (26 px) and info card (56 px), sharp up to about 2x scaling
+    logo = ROOT / "frontend" / "public" / "logo.png"
+    logo.parent.mkdir(parents=True, exist_ok=True)
+    icon.resize((LOGO_SIZE, LOGO_SIZE), Image.LANCZOS).save(logo, optimize=True)
+    print("wrote", logo.relative_to(ROOT))
 
 
 if __name__ == "__main__":

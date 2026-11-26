@@ -7,6 +7,7 @@ import {$, S, setCollator} from './state';
 import {renderAll, showError} from './sync';
 import {setupDatalists, toast} from './ui';
 import {renderUpdateNotice} from './update';
+import {renderAbout} from './about';
 import {openTemplateManager} from './templateDialogs';
 
 // ---- settings dialog ----
@@ -77,5 +78,6 @@ export async function loadLanguage(lang, {render = true} = {}) {
     setupDatalists(S.keywords);
     renderAll();
     renderUpdateNotice();
+    renderAbout();
     if (!$('gdialog').hidden) gdValidate();
 }

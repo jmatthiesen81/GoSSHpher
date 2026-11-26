@@ -24,6 +24,14 @@ import * as sshconfig$0 from "./internal/sshconfig/models.js";
 import * as $models from "./models.js";
 
 /**
+ * About returns name, version, publisher and links of this build.
+ * @returns {$CancellablePromise<$models.AboutInfo>}
+ */
+export function About() {
+    return $Call.ByID(3743564870);
+}
+
+/**
  * CheckUpdate asks GitHub for the latest release. It is called by the
  * frontend after start-up and runs in the background there; without network
  * it fails after updateTimeout at the latest, and the frontend ignores the

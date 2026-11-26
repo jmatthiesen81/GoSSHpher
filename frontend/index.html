@@ -19,7 +19,7 @@
 <!-- Texts are translated at runtime from internal/i18n/locales/*.json (see src/i18n.js);
      the English texts here are only the fallback before the catalog is loaded. -->
 <header class="toolbar">
-    <div class="brand">GoSSHpher</div>
+    <div class="brand"><img src="/logo.png" alt="">GoSSHpher</div>
     <button id="btn-open" data-i18n="toolbar.open" data-i18n-title="toolbar.open.title">Open…</button>
     <div class="split" id="save-split">
         <button id="btn-save" class="primary" data-i18n="toolbar.save" data-i18n-title="toolbar.save.title">Save</button>
@@ -37,7 +37,15 @@
         <button id="tab-editor" class="tab active" role="tab" data-i18n="tab.editor">Editor</button>
         <button id="tab-text" class="tab" role="tab" data-i18n="tab.text">Text</button>
     </div>
-    <button id="btn-settings" data-i18n-title="toolbar.settings.title">⚙</button>
+    <!-- icons drawn as SVG: "⚙" and "ⓘ" render as emoji or are missing in some fonts -->
+    <button id="btn-settings" class="icon" data-i18n-title="toolbar.settings.title" data-i18n-aria-label="toolbar.settings.title">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <!-- info card; a dot marks a newer release that was not dismissed (update.js) -->
+    <button id="btn-about" class="icon info" data-i18n-title="toolbar.about.title" data-i18n-aria-label="toolbar.about.title">
+        <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="6.3" r="1.15" fill="currentColor"/><path d="M10 9v5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span class="dot" aria-hidden="true"></span>
+    </button>
 </header>
 
 <main id="view-editor" class="layout">
@@ -207,6 +215,26 @@
             <button id="ta-cancel" data-i18n="common.cancel">Cancel</button>
         </div>
     </div>
+</div>
+<div id="about" class="modal" hidden>
+    <section class="modal-box about-card" role="dialog" aria-modal="true" aria-labelledby="about-name">
+        <button id="about-close" class="about-x" data-i18n-title="common.close" data-i18n-aria-label="common.close">×</button>
+        <header class="about-brand">
+            <img src="/logo.png" alt="">
+            <div>
+                <h2 id="about-name">GoSSHpher</h2>
+                <p class="about-tagline" data-i18n="about.tagline"></p>
+            </div>
+        </header>
+        <div class="about-version">
+            <span class="about-label" data-i18n="about.version">Version</span>
+            <strong id="about-version"></strong>
+        </div>
+        <div id="about-update" class="about-update" role="status"></div>
+        <dl id="about-list" class="about-list"></dl>
+        <p class="about-privacy" data-i18n="about.privacy"></p>
+        <p id="about-copy" class="about-copy"></p>
+    </section>
 </div>
 <div id="toast" class="toast" hidden></div>
 <div id="update-note" class="update-note" role="status" hidden>

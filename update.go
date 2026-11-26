@@ -35,6 +35,9 @@ type UpdateInfo struct {
 	Latest    string `json:"latest,omitempty"`
 	URL       string `json:"url,omitempty"`
 	Available bool   `json:"available"`
+	// Skipped says why nothing was checked: "dev" (development or test
+	// build) or "disabled" (setting off)
+	Skipped string `json:"skipped,omitempty"`
 }
 
 // Version returns the version of this build ("dev" for development builds).
@@ -50,7 +53,12 @@ func (a *App) CheckUpdate() (UpdateInfo, error) {
 	enabled := a.settings.UpdateCheck
 	a.mu.Unlock()
 	info := UpdateInfo{Current: version}
-	if !enabled || version == "0.0.0" || parseVersion(version) == nil {
+	if version == "0.0.0" || parseVersion(version) == nil {
+		info.Skipped = "dev"
+		return info, nil
+	}
+	if !enabled {
+		info.Skipped = "disabled"
 		return info, nil
 	}
 

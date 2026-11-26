@@ -10,6 +10,11 @@ export {
 import * as $models from "./models.js";
 
 /**
+ * AboutInfo is shown in the info card.
+ * @typedef {$models.AboutInfo} AboutInfo
+ */
+
+/**
  * BackupSettings controls the backup written before a file is overwritten.
  * @typedef {$models.BackupSettings} BackupSettings
  */

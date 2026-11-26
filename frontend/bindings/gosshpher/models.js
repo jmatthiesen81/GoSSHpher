@@ -7,6 +7,20 @@
 import * as sshconfig$0 from "./internal/sshconfig/models.js";
 
 /**
+ * AboutInfo is shown in the info card.
+ * @typedef {Object} AboutInfo
+ * @property {string} name
+ * @property {string} version
+ * @property {string} publisher
+ * @property {string} website
+ * @property {string} repoUrl
+ * @property {string} license
+ * @property {string} platform
+ * @property {string} go
+ * @property {string} [wails]
+ */
+
+/**
  * BackupSettings controls the backup written before a file is overwritten.
  * @typedef {Object} BackupSettings
  * @property {boolean} enabled - Enabled writes <file>.bak-YYYYMMDD-HHMMSS on the first save per session.
@@ -103,6 +117,7 @@ import * as sshconfig$0 from "./internal/sshconfig/models.js";
  * @property {string} [latest]
  * @property {string} [url]
  * @property {boolean} available
+ * @property {string} [skipped] - Skipped says why nothing was checked: "dev" (development or test build) or "disabled" (setting off)
  */
 
 // In interface mode, this file is likely to contain just comments.

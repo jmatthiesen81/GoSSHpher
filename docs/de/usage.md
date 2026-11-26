@@ -4,12 +4,12 @@ Eine Anleitung für das GoSSHpher-Fenster: Blöcke bearbeiten, Gruppen, effektiv
 
 ## Aufbau des Fensters
 
-| Bereich           | Inhalt                                                                                                                                                                                               |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Werkzeugleiste    | Öffnen, *Speichern* mit ▾-Menü für *Speichern unter…*, ↶ ↷ (rückgängig/wiederholen), ↻ (neu laden), Dateipfad, Markierung für ungespeicherte Änderungen, Reiter *Editor* / *Text*, ⚙ (Einstellungen) |
-| Links: Host-Liste | Alle Blöcke mit Positionsnummer, Aliasen, `user@hostname:port`; Filter, Sortierung, Gruppen; Buttons *+ Host*, *+ Match*, *+ Gruppe*                                                                 |
-| Mitte: Editor     | Der ausgewählte Block: Muster, Gruppe, Kommentar, Optionen                                                                                                                                           |
-| Rechts: Inspector | Reiter *Effektiv* (effektive Konfiguration) und Reiter *Hinweise*                                                                                                                                    |
+| Bereich           | Inhalt                                                                                                                                                                                                                              |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Werkzeugleiste    | Logo und Name, Öffnen, *Speichern* mit ▾-Menü für *Speichern unter…*, ↶ ↷ (rückgängig/wiederholen), ↻ (neu laden), Dateipfad, Markierung für ungespeicherte Änderungen, Reiter *Editor* / *Text*, ⚙ (Einstellungen), ⓘ (Info-Karte) |
+| Links: Host-Liste | Alle Blöcke mit Positionsnummer, Aliasen, `user@hostname:port`; Filter, Sortierung, Gruppen; Buttons *+ Host*, *+ Match*, *+ Gruppe*                                                                                                |
+| Mitte: Editor     | Der ausgewählte Block: Muster, Gruppe, Kommentar, Optionen                                                                                                                                                                          |
+| Rechts: Inspector | Reiter *Effektiv* (effektive Konfiguration) und Reiter *Hinweise*                                                                                                                                                                   |
 
 Die Grenzen zwischen den Bereichen und die Spalte *Option* lassen sich ziehen; ein Doppelklick setzt die Breite zurück. Breiten, Sortierung und eingeklappte Gruppen landen in der [Einstellungsdatei](architecture.md#einstellungsdatei).
 
@@ -142,6 +142,10 @@ Der Dialog zeigt außerdem, wo die Einstellungsdatei liegt. Details: [Architektu
 ## Update-Hinweis
 
 Beim Start fragt GoSSHpher im Hintergrund bei GitHub (`api.github.com`) nach dem neuesten Release. Gibt es ein neueres, erscheint unten rechts ein Hinweis mit *Release ansehen* (öffnet die Release-Seite im Browser) und *Ausblenden* (blendet den Hinweis bis zum nächsten Release aus). Die Abfrage blockiert die Anwendung nicht; ohne Internetverbindung bricht sie nach spätestens 5 Sekunden still ab. Entwicklungs-Builds (`dev`, `0.0.0`) fragen nicht nach; abschalten lässt sich die Abfrage in den Einstellungen.
+
+## Info-Karte
+
+ⓘ neben den Einstellungen öffnet eine Karte mit Version, Update-Status, Hersteller, Website, Quellcode, Dokumentation, Lizenz, Changelog und Build-Details (Plattform, Go- und Wails-Version). Links öffnen sich im Browser. Die Karte zeigt das Ergebnis der Update-Prüfung und bietet *Erneut prüfen*; ist die Prüfung beim Start fehlgeschlagen oder war sie damals ausgeschaltet, prüft das Öffnen der Karte einmal neu (außer die Einstellung ist aus). Ein Punkt an ⓘ markiert ein neueres, nicht ausgeblendetes Release. `Esc`, × oder ein Klick daneben schließt die Karte.
 
 ## Rückgängig und Wiederholen
 

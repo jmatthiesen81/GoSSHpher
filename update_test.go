@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -63,7 +64,7 @@ func TestCheckUpdate(t *testing.T) {
 	// switched off: no request
 	agent = ""
 	app.settings.UpdateCheck = false
-	if info, err := app.CheckUpdate(); err != nil || info.Available || agent != "" {
+	if info, err := app.CheckUpdate(); err != nil || info.Available || info.Skipped != "disabled" || agent != "" {
 		t.Errorf("disabled: %+v %v %q", info, err, agent)
 	}
 }
@@ -81,7 +82,7 @@ func TestCheckUpdateForeignURL(t *testing.T) {
 func TestCheckUpdateDevBuild(t *testing.T) {
 	called := false
 	withRelease(t, "0.0.0", func(w http.ResponseWriter, r *http.Request) { called = true })
-	if info, err := NewApp("config").CheckUpdate(); err != nil || info.Available || called {
+	if info, err := NewApp("config").CheckUpdate(); err != nil || info.Available || info.Skipped != "dev" || called {
 		t.Errorf("%+v %v called=%v", info, err, called)
 	}
 }
@@ -112,5 +113,13 @@ func TestCheckUpdateErrors(t *testing.T) {
 	}
 	if d := time.Since(start); d > 2*time.Second {
 		t.Errorf("took %v", d)
+	}
+}
+
+func TestAbout(t *testing.T) {
+	a := NewApp("config").About()
+	if a.Name != "GoSSHpher" || a.Version != version || a.RepoURL != "https://github.com/"+releaseRepo ||
+		a.Platform == "" || !strings.HasPrefix(a.Go, "go") || strings.Contains(a.Go, " ") {
+		t.Errorf("%+v", a)
 	}
 }
