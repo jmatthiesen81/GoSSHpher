@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 # Install GoSSHpher for the current user: binary, icons and menu entry.
 #   wails3 build && scripts/install-linux.sh
+# Only replace the icons (after scripts/icons.py, no build needed):
+#   scripts/install-linux.sh --icons
 # Remove again with: scripts/install-linux.sh --uninstall
 set -eu
 
@@ -17,6 +19,21 @@ refresh() {
     command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -t "$ICON_DIR" 2>/dev/null || true
 }
 
+install_icons() {
+    # drop icons of an earlier install (e.g. a scalable SVG that would win over the PNGs)
+    find "$ICON_DIR" -path '*/apps/gosshpher.*' -delete 2>/dev/null || true
+    (cd "$ROOT/build/linux/icons/hicolor" && find . -name 'gosshpher.*' | while read -r f; do
+        install -Dm644 "$f" "$ICON_DIR/$f"
+    done)
+}
+
+if [ "${1:-}" = "--icons" ]; then
+    install_icons
+    refresh
+    echo "Icons installed: $ICON_DIR/*/apps/gosshpher.png"
+    exit 0
+fi
+
 if [ "${1:-}" = "--uninstall" ]; then
     rm -f "$BIN_DIR/gosshpher" "$DESKTOP"
     find "$ICON_DIR" -path '*/apps/gosshpher.*' -delete 2>/dev/null || true
@@ -28,11 +45,7 @@ fi
 [ -x "$ROOT/build/bin/gosshpher" ] || { echo "build/bin/gosshpher is missing – run 'wails3 build' first." >&2; exit 1; }
 
 install -Dm755 "$ROOT/build/bin/gosshpher" "$BIN_DIR/gosshpher"
-# drop icons of an earlier install (e.g. a scalable SVG that would win over the PNGs)
-find "$ICON_DIR" -path '*/apps/gosshpher.*' -delete 2>/dev/null || true
-(cd "$ROOT/build/linux/icons/hicolor" && find . -name 'gosshpher.*' | while read -r f; do
-    install -Dm644 "$f" "$ICON_DIR/$f"
-done)
+install_icons
 install -Dm644 "$ROOT/build/linux/$APP_ID.desktop" "$DESKTOP"
 # absolute Exec path, works even if ~/.local/bin is not in PATH of the session
 sed -i "s|^Exec=gosshpher|Exec=$BIN_DIR/gosshpher|" "$DESKTOP"

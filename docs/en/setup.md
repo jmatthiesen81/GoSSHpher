@@ -56,6 +56,7 @@ The first argument is the file to edit if it does not start with `-`. A missing 
 
 ```bash
 wails3 build && scripts/install-linux.sh
+scripts/install-linux.sh --icons      # only replace the icons (after scripts/icons.py, no build needed)
 scripts/install-linux.sh --uninstall
 ```
 

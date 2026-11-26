@@ -56,6 +56,7 @@ Das erste Argument ist die zu bearbeitende Datei, sofern es nicht mit `-` beginn
 
 ```bash
 wails3 build && scripts/install-linux.sh
+scripts/install-linux.sh --icons      # nur die Icons austauschen (nach scripts/icons.py, ohne Build)
 scripts/install-linux.sh --uninstall
 ```
 
